@@ -19,3 +19,6 @@ experiments/raw/
 *.mp4
 *.mov
 *.zip
+
+# Copyrighted reference PDFs (keep local)
+references/pdf/
