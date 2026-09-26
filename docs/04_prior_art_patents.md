@@ -1,5 +1,7 @@
 # 04. Prior Art — Patents
 
+> **[2026-09 갱신] Cartesian 구조의 재검색(로봇 스쿠핑, 갠트리 식품 장치, 자동 디스펜서)은 `docs/updated_prior_art.md`와 `research/patents.md` §5.**
+
 > 원장(45건 스크리닝 표, 10건 심층분석): `research/patents.md`
 > **청구항 원문·도면은 한 건도 열람하지 못했다**(네트워크 차단). 아래 판단은 초록 수준이며, FTO 판정이 아니다.
 

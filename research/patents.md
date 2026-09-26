@@ -129,6 +129,7 @@
 - **Similarity:** 통 스쿠핑의 동력화, ejector
 - **Difference:** 다자유도 로봇팔, 사람 위치지정 없음
 - **Risk:** 상태 미확인(계류/등록 가능) → **중간.** 우리 ejector를 "retention rod"나 "스쿱 내부 wiper"로 만들기 전에 청구항 확인
+- **재검색(§5):** 출원인 = **Niska Retail Robotics Pty Ltd** `[SNIPPET]`. 출원일 자료가 상충한다(위 2022-08-26 vs 재검색 스니펫 2024-02-28, 공개 2024-07-25) `[UNCERTAIN]`.
 
 ### D8. US12343859B2 — XYZ Inc. (엑스와이지, 서울), 2025 등록
 - **URL:** https://patents.google.com/patent/US12343859
@@ -180,3 +181,53 @@
 **FTO 확인 목록 (P1, 변리사/산학협력단):** US12343859B2(XYZ, 등록), US20240245265A1(상태 미확인), GB2633220A(계류), US8591214B2·US11957276(히터를 쓸 경우), US7503252B2(유지 여부)
 
 **미검색 (예산 소진):** KIPRIS 엑스와이지 출원 23건, 중국 电动冰淇淋勺 실용신안, 초음파/진동 스쿱 추가, Carpigiani pozzetti 디스펜싱, Unilever scooped-appearance, 가전·전동공구의 전류 기반 jam 감지
+
+---
+
+## 5. Cartesian 구조 재검색 (2026-09, Task 3)
+
+> 해석과 판정은 `docs/updated_prior_art.md`. 이 절은 원자료다.
+> 방법: WebSearch 55회(예산 전부), WebFetch 1회 차단. **스니펫만 읽었고 청구항 원문은 읽지 못했다.** 태그: `[SNIPPET]` / `[UNCERTAIN]` / `[NOT FOUND]`.
+
+| # | 문헌 | 출원인·일자 | 메커니즘(스니펫 범위) | 유사도 | 겹침 |
+|---|---|---|---|---|---|
+| 1 | Columbia "Scoop" 학생 로봇 (Group8-Scoop.pdf) | 날짜 `[UNCERTAIN]` | 직선 1 + 회전 6 관절(7 DOF), 도매 통 두 줄 × 8, 맛으로 이동 → 스쿠핑 → 컵 배출 `[SNIPPET]` | 중 | 통 배치, 통 열 직선축, 맛→통→컵 |
+| 2 | US20240245265A1 | Niska Retail Robotics Pty Ltd, 출원 2024-02-28 / 공개 2024-07-25 `[SNIPPET]`(§2 D7과 상충) | 로봇팔, retention rod, 스쿱 안쪽을 닦는 wiper blade `[SNIPPET]` | 중 | 통 스쿠핑, 와이퍼 배출 |
+| 3 | Niska Robotic Ice Cream Bar (제품) | 멜버른, 2019-09 개점 `[SNIPPET]` | 로봇팔 "Eka", 35맛 `[SNIPPET]` | 하–중 | 여러 맛 자동 스쿠핑(팔) |
+| 4 | US11969878 / US12275130 Robotic food preparation system | 출원인 `[NOT FOUND]` | 여러 수직축 **갠트리**가 재료 용기/디스펜서에 정렬, 배출, **계량**, 조리기 투입 `[SNIPPET]` | 중(구조) / 하(용도) | 갠트리 + 고정 스테이션 + 계량 |
+| 5 | US11597084B2 Controlling robot torque and velocity based on context | Dexai Robotics(원래 Draper) `[SNIPPET]` | 아이스크림 통 접근 시 **자유공간 낮은 토크 / 스쿠핑 중 높은 상황별 토크** `[SNIPPET]` | 중 | 상태별 힘 한계 |
+| 6 | US11628566 / WO2020056279A1 Manipulating fracturable and deformable materials | Dexai 관련 보도 `[SNIPPET]`, 출원인 `[UNCERTAIN]` | 평가지표: **표면 아래 깊이**, 담긴 양, 배출량. 토크로 양 추정 `[SNIPPET]` | 하–중 | 표면 기준 깊이 |
+| 7 | US4009740A Ice cream dispensing machine | `[NOT FOUND]` | **리드스크류 캐리지**가 콘을 매거진 ↔ 배출 스테이션으로, half-nut 해제 시 수동 `[SNIPPET]`. "여러 맛"은 도구 요약 `[UNCERTAIN]` | 하–중 | 스테이션 간 나사 이송(콘이 움직임) |
+| 8 | CN107833390A 冰淇淋自动售卖机 | `[NOT FOUND]` | **슬라이드 레일 위 로봇** + 그리퍼 + 아이스크림기 + 콘 배출 `[SNIPPET]`, 소프트아이스크림 추정 `[UNCERTAIN]` | 하–중 | 레일 + 로봇 |
+| 9 | US5385464 / US5149551 | `[NOT FOUND]` | 냉장 용기 하단 절단 수단, 컨베이어, 정량 스쿱, **스쿱이 찬 정도 감지 후 정지**, 스쿱 회전 배출 `[SNIPPET]` | 하–중 | 자동 portion 감지, 회전 배출 |
+| 10 | US7503252B2 | `[NOT FOUND]` | 수직 카톤 공급, 회전 슬라이서, 회전수로 스쿱 수, 카톤 벽 벗기는 나사 `[SNIPPET]` | 하 | 표면 위치를 기구로 고정 |
+| 11 | US3838791A Machine for dispensing ice cream from a package | Edward Raitt, 1974-10-01 `[SNIPPET]` | 컨베이어 → 포장 안으로 전진하는 ejector → 절단 → 피더 휠, 스위치 후 자동 `[SNIPPET]` | 하 | 자동 분할·절단 |
+| 12 | US3155053A Device for dispensing semi-solid substances | `[NOT FOUND]` | 반구 몰드를 채운 뒤 **회전시켜 긁어냄** `[SNIPPET]` | 하 | 회전 + 스트리퍼 |
+| 13 | US1544802A | `[NOT FOUND]` | 링기어에 달린 스쿱이 용기 안에서 회전 `[SNIPPET]` | 하 | 용기 안 동력 스쿱 |
+| 14 | US5464119 / EP0628255 (우선권 ITRM930397A1 추정 `[UNCERTAIN]`) | Universal Ice Cream Machines S.r.l. `[SNIPPET]` | 콘 뒤집기 장치, 좌석이 배출구 아래 3위치 이동 `[SNIPPET]` | 하 | 자동 콘 처리 |
+| 15 | US7163128B2 Hard ice cream dispenser | `[NOT FOUND]` | 타이밍벨트 풀리 안 **볼스크류**로 플런저 구동, 용기 뒤집음 `[SNIPPET]` | 하 | 볼스크류 구동 |
+| 16 | US20070254084A1 | `[NOT FOUND]` | 자유표면과 나란한 **광학 빔**으로 셰이크 수위 측정 `[SNIPPET]` | 하 | 수위 감지(광학, 액체) |
+| 17 | US9635874B2 / US9259016 / US11019834 / US11166475 | Stoelting 추정 `[UNCERTAIN]` | 컵 디스펜서, 컵을 옮기는 **이동 플랫폼**, 제품·양·토핑 선택 `[SNIPPET]` | 하 | 자동 컵 이송(소프트) |
+| 18 | US10743562B2 / US11625970B2 | Maximilian M. Anziano `[SNIPPET]` | 적층 빙과 캐러셀, 토핑 팔, 결제 `[SNIPPET]` | 하 | 자판기 |
+| 19 | CN111968306A, CN111383384B | `[NOT FOUND]` | 6축 로봇 + 소프트기 / 캔 저장 맛 선택 배출 `[SNIPPET]` | 하 | 맛 선택 |
+| 20 | CN201691001U / CN201691002U | `[NOT FOUND]` | 기어·랙 회전(아이스크림 분사·인쇄) `[SNIPPET]` | 하 | – |
+| 21 | Dice Cream Robotics (제품) | 2023–2024 시제품 `[SNIPPET]` | **로봇팔** + 원형 레일 "minion", **큐브형** 스쿱, 12맛, 주문마다 데운 스쿱 세척, 주문당 ~40 s `[SNIPPET]` | 하–중 | 여러 맛 자동(팔) |
+| 22 | RIT Ice Cream Scooping Robot | RIT `[SNIPPET]` | 주문 화면, 3맛 중 1–2 스쿱, **로봇팔** `[SNIPPET]` | 하–중 | 화면 선택 |
+| 23 | ROBOTICECREAM | `[NOT FOUND]` | "AI" 스쿱 콘 시스템, 콘 집기·스쿠핑·토핑·자가세척, "전통 스쿱 콘의 유일한 로봇 솔루션" 주장 `[SNIPPET]`, 기구학 `[UNCERTAIN]` | `[UNCERTAIN]` | 수동 확인 필요 |
+| 24 | RobotAnno, Sweet Robo, Hommy, CafeXbot/VLT, Connected Robotics, Flexiv/Noematrix WAIC 2025, KUKA 데모 | 다수 | 모두 **로봇팔**, 대부분 소프트아이스크림 `[SNIPPET]` | 하 | – |
+| 25 | GitHub Jik-Kim/auto-pharmacist PR #216, issue #269 | 날짜 `[UNCERTAIN]` | 비식품 스쿠핑: **재료 표면 접촉 측정**, WORLD-Z 보정 스플라인, 표면 기준 깊이 보정, 높이 측정 전용 모드, 털기·**계량** 자세 `[SNIPPET]` | 중((a), (c)) | 접촉 표면 기준 + 계량 |
+| 26 | Technogel DR7 | Technogel `[SNIPPET]` | 1–3맛 압출 디스펜서를 로봇이 운반해 용기 충전 `[SNIPPET]` | 하 | – |
+| 27 | Chef Robotics | `[SNIPPET]` | 깊이 카메라 + **무게 감지 트레이**, 무게 기준 스쿠핑 `[SNIPPET]` | 하–중 | 계량 확인(비전 기반) |
+| 28 | EP3616528A1, EP2712528A1 | EP3616528: IT 우선권 2018-08-29, 공개 2020-03-04 `[SNIPPET]` | 피스톤 + 임펠러 노즐 압출 / 측면 개구 스쿱 + ejector `[SNIPPET]` | 하 | – |
+
+**질문별(스니펫 범위):**
+- (a) 스쿠핑 전 표면 높이 자동 검출: 아이스크림 특허에서 힘·전류·접촉 방식 `[NOT FOUND]`. 인접: #16(광학), #5(단계별 토크), #6(표면 아래 깊이), #25(비식품 접촉).
+- (b) 한 통 안 스쿱 위치 순환(레인/래스터): `[NOT FOUND]`. #27은 비전으로 위치 적응.
+- (c) 자동 스쿠핑 후 컵 계량: 아이스크림에서 `[NOT FOUND]`. 인접: 음료 디스펜서 로드셀(US9141562 계열), #27, #4, #25, #9.
+- (d) 고정 컵 스테이션 + 갠트리 이송: 팔로는 흔함(#1, #3, #21, #22). 갠트리는 #4(식품 조리). 반대 구조 #7, #17. 아이스크림 갠트리 `[NOT FOUND]`.
+- (e) 회전 + 고정 스트리퍼/와이퍼 배출: #2, #12, #9, #11 → 충분히 개시됨.
+
+**조사 URL(주요):** patents.google.com/patent/US20240245265A1 · jonathanblutinger.com/img/Group8-Scoop.pdf · rit.edu/imagine/exhibits/ice-cream-scooping-robot · patents.google.com/patent/US4009740 · patents.google.com/patent/US11597084B2 · image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11969878 · …/12275130 · …/11628566 · …/5385464 · …/5149551 · …/7163128 · …/9141562 · patents.google.com/patent/WO2020056279A1 · patents.google.com/patent/US3155053 · patents.google.com/patent/US3838791 · patents.google.com/patent/US20070254084 · patents.google.com/patent/CN107833390A · patents.google.com/patent/US9635874B2 · github.com/Jik-Kim/auto-pharmacist/pull/216 · github.com/Jik-Kim/auto-pharmacist/issues/269 · unlimitventures.com/projects/dice-cream · roboticecream.com · chefrobotics.ai · thespoon.tech (Dexai) · broadsheet.com.au (Niska)
+
+**다음 조사:** Espacenet/KIPRIS에서 CPC A23G9/28, A23G9/22 + B25J9/026 분류 검색(중국 실용신안 포함), US11597084B2 독립항 원문, ROBOTICECREAM 기구학, auto-pharmacist 공개일.
+
