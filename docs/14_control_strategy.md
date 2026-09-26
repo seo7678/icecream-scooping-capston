@@ -1,5 +1,9 @@
 # 14. Control Strategy
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> **계속 유효:** 전류/힘 추정의 임계값 규칙(≤ 0.8 × 하드웨어 한계), 깊이 적응 + 부피 적분 개념, 안전 기능은 하드웨어로. **대체됨:** 상태기계 → `control_state_machine.md`. 깊이 적응은 θ 대신 **Z_M**으로, 힘 측정은 모터 전류 대신 **X·Z 볼너트 로드셀**로.
+
+
 > 원칙: 복잡한 AI 금지. **모터 전류 → 힘/토크 추정 → 규칙 기반 적응.** 안전 기능은 MCU 소프트웨어에 맡기지 않는다.
 > 시뮬레이션: `calc/load_adaptive_sim.py` → `calc/output/load_adaptive_sim.md`, `fig_load_adaptive.png`
 

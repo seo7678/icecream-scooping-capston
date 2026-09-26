@@ -1,5 +1,9 @@
 # 12. Workstation Architecture
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> 이 문서 전체(레일·스윙 암·웰 도킹·작업자 워크플로)는 **Legacy M 대안**이다. 모듈별 '정말 필요한가?' 판정 중 가열·비전·무게센서 삭제, 헹굼 필요, 가드 필요는 새 구조에도 그대로 적용된다.
+
+
 > 원칙: 억지로 규모를 키우지 않는다. 모듈마다 "정말 필요한가?"를 묻고, 필요성이 낮으면 삭제한다.
 > 캡스톤 산출물은 **단일 웰 스테이션(V1)**이다. 전체 캐비닛 워크스테이션은 **제품 비전**으로만 기술한다.
 

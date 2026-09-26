@@ -1,5 +1,9 @@
 # 11. Final Mechanism — Reference Architectures A, B, C
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> **계속 유효:** 스쿱 기하(d = R·cos θ − h, 절삭단면 A), 식품 모듈(외부 push-rod, 밀봉 스템), θ 구동 사양, B안의 압력각 한계. **대체됨:** 헤드 내부 x 볼스크류와 z 잠금 → 전역 X_M(끌기)·Z_M(깊이)로 이동, 공격 자세는 개구부 앞-아래(θ_s = −30°)로 변경(`scooping_head_mechanism.md`).
+
+
 ## 1. 공통 헤드 기하와 기구학
 
 세 후보는 같은 스쿱 모듈을 쓴다. 차이는 x와 θ를 **무엇이 움직이느냐**뿐이다.

@@ -1,5 +1,9 @@
 # 16. Prototype V1 — 3축 연구 rig + 단일 웰 스테이션
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> 3축(z, x, θ) 연구 rig는 새 구조에서 **Cartesian V1의 X·Z·θ와 같은 축**이다(X 행정을 1.15 m로 늘리고 Y 크로스슬라이드를 더한 것). 새 BOM: `BOM/cartesian_prototype_v1.csv`. 통 포스 플랫폼·계측 수동 스쿱은 연구용으로 계속 유효.
+
+
 ## 1. V1이 답해야 할 질문 (만드는 이유)
 
 | 질문 | 게이트 |

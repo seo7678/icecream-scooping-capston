@@ -1,5 +1,9 @@
 # 17. Experiment Plan
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> **계속 유효:** E0(drag test, 최우선), E3(파라미터), E4(궤적군), E5(부하 적응), E6–E9. **바뀜:** 자동 구조에서는 작업자가 스쿱에 힘을 주지 않으므로 E1(수동 vs 접지 vs 동력)은 '수동 스쿠핑의 기준부하 측정'으로 축소되고, **E2(사이클타임)와 정량(E3)** 이 핵심 KPI가 된다(`motion_and_cycle_time.md`).
+
+
 > 목표: "만들었더니 편하다"가 아니라 **작업부하가 몇 N, 몇 %MVC, 몇 도 줄었는지**를 통계적으로 보인다.
 > 가설·판정선은 docs/01 §6. **데이터 수집 전에 이 문서와 docs/01을 커밋하고 태그(`prereg-v1`)를 단다**(사후 기준 변경 금지).
 

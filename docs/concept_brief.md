@@ -1,5 +1,9 @@
 # 하드아이스크림 스쿠핑 — 문제에서 메커니즘까지
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> 이 브리프의 §1–§3(문제, 기존 해결책·특허와 한계, 공학적 아이디어)은 유효하다. §4(구조와 메커니즘)는 Legacy M이다. Cartesian 구조는 `system_architecture_cartesian.md`.
+
+
 > 한 문서 요약본. 세부 근거와 계산은 괄호 안 문서에 있다.
 > 근거 강도 표시: **중** / **약** / `가정`(측정 전 값). 이번 조사는 원문 열람이 막힌 환경에서 검색 요약으로 했으므로 논문 수치는 원문 대조 전까지 인용하지 않는다(docs/02).
 

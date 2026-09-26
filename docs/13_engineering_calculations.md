@@ -1,5 +1,9 @@
 # 13. Engineering Calculations
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> **계속 유효:** θ축 토크, push-rod 좌굴, 스템 피로(→ 새 구조는 Ø30×3), 에너지. **대체됨:** 헤드 내부 x축(SFU1610 + DC) 사이징과 도킹 래치 → `calc/output/gantry_motor_sizing.md`, `z_axis_sizing.md`, `scoop_load_path.md`.
+
+
 > 전체 표: `calc/output/engineering_calcs.md` (생성: `python3 calc/engineering_calcs.py`)
 > **모든 하중은 ASSUMPTION CASE(50/100/150/200 N)다.** 실측 스쿱 힘은 아직 없다(docs/07 §5). 측정 후 스크립트 상단만 바꿔 다시 실행한다.
 

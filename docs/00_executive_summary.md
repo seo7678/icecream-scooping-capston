@@ -1,5 +1,9 @@
 # 00. Executive Summary
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> 이 요약의 문제정의·근거·결정 게이트(G0–G2)는 그대로 유효하다. 작업자가 헤드를 도킹하는 설계 결론은 Legacy M 대안으로만 남는다. 새 요약은 `final_system_concept.md`.
+
+
 **프로젝트:** 하드아이스크림 스쿠핑 작업부하의 정량화와 반력접지형 2자유도 동력 스쿠핑 모듈의 설계·검증
 **상태 (2026-09-26):** 문제 재검증·선행조사·구조 선정·계산·실험계획 완료. **실측 데이터 0건** — 다음 단계는 P0 측정(docs/24).
 

@@ -1,5 +1,9 @@
 # 24. Next Actions — 이번 주부터
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> **P0(원문 확보, 매장 관찰, 수동 baseline, drag test, 형상·온도 측정, IRB)는 그대로 최우선이다.** P1의 V1 제작은 `final_system_concept.md` §8의 Cartesian V1 순서로 대체된다.
+
+
 우선순위: **P0** = 1–2주 안에, 이것 없이는 방향을 못 정함 · **P1** = G0/G1 통과 후 · **P2** = 개선
 
 ## P0 (1–2주차)

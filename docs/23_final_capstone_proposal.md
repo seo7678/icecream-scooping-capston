@@ -1,5 +1,9 @@
 # 23. 종합설계 최종 제안서
 
+> ⚠️ **Legacy Architecture M — 수동 위치지정(2026-09 이전 기준안).** 현재 기준 아키텍처는 **Cartesian 자동 맛 선택 구조**다 → [`system_architecture_cartesian.md`](system_architecture_cartesian.md), [`final_system_concept.md`](final_system_concept.md), 비교는 [`architecture_comparison.md`](architecture_comparison.md).
+> 이 제안서는 Legacy M 기준이다. 문제·근거·선행기술·게이트 부분은 유효하고, 시스템·메커니즘·BOM·안전 부분은 `final_system_concept.md`가 대체한다.
+
+
 ## 1. 프로젝트명
 
 **하드아이스크림 스쿠핑 작업부하의 정량화와 반력접지형 2자유도 동력 스쿠핑 모듈의 설계·검증**
