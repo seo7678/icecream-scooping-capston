@@ -121,7 +121,8 @@ v_tub = math.pi * cm.TUB_DEPTH / 3 * (r_top ** 2 + r_top * r_bot + r_bot ** 2)
 reach = (r_top - cm.R_SCOOP - cm.WALL_MARGIN + w / 2) / r_top
 p(f"- 통 부피 ≈ {v_tub/1e6:.1f} L (가정 치수), 115 g portion ≈ {v_tub/V_TARGET:.0f}개 분량")
 p(f"- 기계 도달 반경 ≈ 벽에서 {r_top*(1-reach):.0f} mm 안쪽까지 → 면적 기준 ≈ {reach**2*100:.0f} %, 바닥 여유 {cm.FLOOR_MARGIN:.0f} mm 제외")
-p(f"- → 통 하나에서 기계가 약 {reach**2*(1-cm.FLOOR_MARGIN/cm.TUB_DEPTH)*v_tub/V_TARGET:.0f}개를 뜨고, **벽 쪽 링은 사람이 정리**해야 한다(통 교체 시 또는 주기적으로). 이 비율은 실측 통 치수로 다시 계산한다.")
+p(f"- → 면적 기준 상한으로는 통 하나에서 약 {reach**2*(1-cm.FLOOR_MARGIN/cm.TUB_DEPTH)*v_tub/V_TARGET:.0f}개. 레인 끝(C 이동 범위 ± rim 폭)과 테이퍼까지 넣은 5 mm 격자 시뮬레이션(`calc/output/scoop_mechanism_compare.md`)은 **약 30개(통 부피의 59 %)** 다. 범위 30–43개로 본다.")
+p("- **벽 쪽 링은 사람이 정리**해야 한다(통 교체 시 또는 주기적으로). 이 비율은 실측 통 치수와 E3 실측 절삭 형상으로 다시 계산한다.")
 
 with open(OUT, "w", encoding="utf-8") as f:
     f.write("\n".join(lines) + "\n")
