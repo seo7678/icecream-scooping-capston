@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Polygon, Rectangle, FancyArrowPatch, FancyBboxPatch, Ellipse
 
 import machine as m
+import machine3d as m3
 from machine import cm
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -91,113 +92,27 @@ def fig_axonometric():
     ax = fig.add_axes([0.0, 0.0, 0.66, 0.9])
     ax.set_aspect("equal")
     ax.axis("off")
-    X, Y, Z, TH = 600.0, 0.0, 30.0, -30.0    # pivot C over TUB2, descending in attack pose
+    A = m3.Axo()
+    X, Y, Z, TH = 600.0, -40.0, 30.0, -30.0    # pivot C over TUB2, lane y = -40, descending in attack pose
+    m3.draw_machine(ax, A, X, Y, Z, TH, arrows=True)
 
-    # floor
-    FACES.append((1e9, [proj(p)[:2] for p in [(-420, -420, -850), (1600, -420, -850), (1600, 420, -850),
-                                                (-420, 420, -850)]], "#EEF1F4", "none", 0, 1.0))
-    # posts + braces + beam + rails + screw + motor
-    for x0, x1 in m.POSTS_X:
-        box(x0, x1, 185, 265, -850, 880, m.C_ALU)
-    box(-200, 1350, 200, 250, 760, 860, m.C_STEEL)
-    box(-170, 1320, 186, 200, 772, 786, "#44505b", lw=0.3)
-    box(-170, 1320, 186, 200, 834, 848, "#44505b", lw=0.3)
-    box(1290, 1370, 178, 250, 772, 848, "#2E3A46")
-    # freezer + deck + stands
-    box(*m.FREEZER_X, *m.FREEZER_Y, -850, -20, "#F2F5F8", ec="#9aa6b2")
-    box(m.FREEZER_X[0] - 20, m.FREEZER_X[1] + 20, -270, 270, -20, 0, m.C_DECK, ec="#8E9AA5")
-    box(m.RINSE_X - 80, m.RINSE_X + 80, -80, 80, -160, 0, "#DCE3E8", ec="#8E9AA5")
-    box(m.RINSE_X - 25, m.RINSE_X + 25, -25, 25, -850, -160, "#D0D6DC", ec="#9aa6b2")
-    box(m.CUP_X - 95, m.CUP_X + 95, -95, 95, -140, 0, "#DCE3E8", ec="#8E9AA5")
-    box(m.CUP_X - 25, m.CUP_X + 25, -25, 25, -850, -140, "#D0D6DC", ec="#9aa6b2")
-    base = flush()
-    for d, verts, fc, ec, lw, al in base:
-        ax.add_patch(Polygon(verts, closed=True, fc=fc, ec=ec, lw=lw, alpha=al, zorder=1))
-
-    # tub openings with ice cream (clipped to the opening)
-    for fid, name, tx, s, col in m.FLAVORS:
-        t = np.linspace(0, 2 * math.pi, 90)
-        rim = [proj((tx + 115 * math.cos(a), 115 * math.sin(a), 0))[:2] for a in t]
-        op = Polygon(rim, closed=True, fc="#E9E4D8", ec="#6f6656", lw=1.0, zorder=2)
-        ax.add_patch(op)
-        rs = m.tub_half_width(s)
-        sfc = [proj((tx + rs * math.cos(a), rs * math.sin(a), s))[:2] for a in t]
-        p = Polygon(sfc, closed=True, fc=col, ec="none", zorder=2.1)
-        ax.add_patch(p)
-        p.set_clip_path(op)
-    # rinse water, cup
-    t = np.linspace(0, 2 * math.pi, 60)
-    ax.add_patch(Polygon([proj((m.RINSE_X + 70 * math.cos(a) * 1.0, 70 * math.sin(a), -20))[:2] for a in t],
-                         closed=True, fc=m.C_WATER, ec="#7aa9bf", lw=0.6, zorder=2))
-    ax.add_patch(Polygon([proj((m.CUP_X + 40 * math.cos(a), 40 * math.sin(a), 0))[:2] for a in t],
-                         closed=True, fc="white", ec="#8E9AA5", lw=0.9, zorder=2))
-    ax.add_patch(Polygon([proj((m.CUP_X + 31 * math.cos(a), 31 * math.sin(a), -60))[:2] for a in t],
-                         closed=True, fc="#e8ecef", ec="none", zorder=2.05))
-
-    # moving parts
-    box(X - 100, X + 100, 160, 200, 735, 885, m.C_MOVE, ec="#1E4E80")
-    box(X - 80, X + 80, -70, 170, 700, 735, "#5C8FC8", ec="#1E4E80")
-    box(X - 70, X + 70, 35, 55, m.ZPLATE[0], m.ZPLATE[1], m.C_MOVE_L, ec=m.C_MOVE, zbias=-600)
-    box(X + 30, X + 72, 35, 77, m.ZPLATE[1] - 45, m.ZPLATE[1], "#2E3A46")
-    cb = Z + m.STEM + m.HEAD
-    box(X - 30, X + 30, -30, 30, cb, cb + m.COL_LEN, m.C_STEEL, ec=m.C_STEEL_D)
-    box(X - 60, X + 60, -45, 45, Z + m.STEM, cb, m.C_HEAD, ec="#1b242e")
-    box(X - 10, X + 50, -95, -45, Z + m.STEM + 25, Z + m.STEM + 85, "#6C7E92", ec="#26313d")
-    box(X - 85, X + 85, -70, 70, Z + m.STEM - 5, Z + m.STEM, m.C_FOOD, ec="#a86d00", lw=0.4)
-    box(X - 7.5, X + 7.5, -7.5, 7.5, Z, Z + m.STEM - 5, "#D7DCE1", ec=m.C_FOOD)
-    lx, lz = m.lever_tip(X, Z, TH)
-    box(lx - 4, lx + 4, -4, 4, lz, lz + m.STEM - 5, "#E7C77f", ec=m.C_FOOD, lw=0.4)
-    moving = flush()
-    for d, verts, fc, ec, lw, al in moving:
-        ax.add_patch(Polygon(verts, closed=True, fc=fc, ec=ec, lw=lw, alpha=al, zorder=3))
-    # scoop: sphere silhouette + rim circle
-    c2 = proj((X, 0, Z))
-    ax.add_patch(Circle(c2[:2], m.R, fc="#E3B865", ec="#a86d00", lw=0.9, zorder=4))
-    th = math.radians(TH)
-    u2 = np.array([-math.sin(th), 0, math.cos(th)])
-    rim = [proj(np.array([X, 0, Z]) + m.R * (math.cos(a) * np.array([0, 1, 0]) + math.sin(a) * u2))[:2]
-           for a in np.linspace(0, 2 * math.pi, 60)]
-    ax.add_patch(Polygon(rim, closed=True, fc="#F4E4BE", ec="#a86d00", lw=0.9, zorder=4.1))
-
-    # enclosure (transparent) + cup bay + HMI
-    E = [(-320, -300, 0), (1500, -300, 0), (1500, 300, 0), (-320, 300, 0),
-         (-320, -300, 1220), (1500, -300, 1220), (1500, 300, 1220), (-320, 300, 1220)]
-    P = [proj(p)[:2] for p in E]
-    for a, b in [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)]:
-        ax.plot([P[a][0], P[b][0]], [P[a][1], P[b][1]], color="#7FA3C6", lw=0.9, ls=(0, (5, 3)), zorder=5)
-    ax.add_patch(Polygon([P[0], P[1], P[5], P[4]], closed=True, fc="#9CC0E6", ec="none", alpha=0.07, zorder=5))
-    bay = [proj(p)[:2] for p in [(1040, -300, 0), (1200, -300, 0), (1200, -300, 220), (1040, -300, 220)]]
-    ax.add_patch(Polygon(bay, closed=True, fc="white", ec="#c24", lw=1.0, ls="--", alpha=0.9, zorder=5.1))
-    for zz in (60, 150):
-        for xx in (1040, 1200):
-            q = proj((xx, -300, zz))
-            ax.add_patch(Circle(q[:2], 9, fc=m.C_SENSOR, ec="none", zorder=5.2))
-    door = [proj(p)[:2] for p in [(0, -300, 20), (1000, -300, 20), (1000, -300, 1180), (0, -300, 1180)]]
-    ax.add_patch(Polygon(door, closed=True, fc="none", ec="#7FA3C6", lw=1.2, zorder=5.1))
-    hmi = [proj(p)[:2] for p in [(-290, -302, 160), (-150, -302, 160), (-150, -302, 320), (-290, -302, 320)]]
-    ax.add_patch(Polygon(hmi, closed=True, fc="#26313d", ec="#111", lw=0.6, zorder=5.3))
-    es = proj((-220, -302, 400))
-    ax.add_patch(Circle(es[:2], 26, fc="#FFD400", ec="#333", lw=0.6, zorder=5.3))
-    ax.add_patch(Circle(es[:2], 16, fc="#D0021B", ec="none", zorder=5.4))
-
-    # callouts: anchors projected, labels stacked in two columns in anchor order (no crossings)
+    # callouts: anchors projected, labels stacked in two columns level with their anchors
     calls = [
-        (1, (250, 200, 860)), (2, (X + 100, 180, 885)), (3, (X - 80, -70, 718)), (4, (X + 50, 56, 1175)),
-        (5, (X - 30, -30, 820)), (6, (X - 60, -45, Z + 360)), (7, (X - 7, -8, Z + 150)), (8, (340, -60, -10)),
-        (9, (600, -250, -400)), (10, (m.CUP_X + 95, -60, -70)), (11, (m.RINSE_X - 80, -40, -80)),
-        (12, (1200, -300, 150)), (13, (-220, -302, 240)), (14, (1500, -300, 420)),
+        (1, (250, 200, 860)), (2, (X + 100, 180, 885)), (3, (X - 75, -130, 712)), (4, (X, Y + 50, 1175)),
+        (5, (X - 30, Y - 30, 820)), (6, (X - 60, Y - 45, Z + 360)), (7, (X - 7, Y - 8, Z + 150)),
+        (8, (340, -60, -10)), (9, (600, -250, -400)), (10, (m.CUP_X + 95, -60, -70)),
+        (11, (m.RINSE_X - 80, -40, -80)), (12, (1200, -300, 150)), (13, (-220, -302, 240)), (14, (1500, -300, 420)),
     ]
-    anchors = {n: proj(p3)[:2] for n, p3 in calls}
-    xs_all = [pt[0] for f in base + moving for pt in f[1]]
-    ys_all = [pt[1] for f in base + moving for pt in f[1]]
-    x_lo, x_hi = min(xs_all), max(xs_all)
-    y_lo, y_hi = min(ys_all), max(ys_all)
+    anchors = {n: A.proj(p3)[:2] for n, p3 in calls}
+    corners = [(x, y, z) for x in (-420, 1600) for y in (-420, 420) for z in (-850, 1220)]
+    P = A.pts(corners)
+    x_lo, x_hi, y_lo, y_hi = P[:, 0].min(), P[:, 0].max(), P[:, 1].min() + 150, P[:, 1].max()
     mid = 0.5 * (x_lo + x_hi)
     left = sorted([n for n in anchors if anchors[n][0] < mid], key=lambda n: -anchors[n][1])
     right = sorted([n for n in anchors if anchors[n][0] >= mid], key=lambda n: -anchors[n][1])
     gap = 125.0
     for side, col_x in ((left, x_lo - 170), (right, x_hi + 170)):
-        ys = [anchors[n][1] for n in side]            # start level with the anchor, then spread apart
+        ys = [anchors[n][1] for n in side]
         for i in range(1, len(ys)):
             ys[i] = min(ys[i], ys[i - 1] - gap)
         for i in range(len(ys) - 2, -1, -1):
@@ -206,30 +121,29 @@ def fig_axonometric():
         ys = [y - shift for y in ys]
         for n, ty in zip(side, ys):
             ax_, ay_ = anchors[n]
-            ax.plot([ax_, col_x], [ay_, ty], color="#44505b", lw=0.7, zorder=6)
-            ax.add_patch(Circle((ax_, ay_), 9, fc="#1F2A36", ec="none", zorder=6))
-            ax.add_patch(Circle((col_x, ty), 42, fc="#1F2A36", ec="white", lw=1.0, zorder=7))
+            ax.plot([ax_, col_x], [ay_, ty], color="#44505b", lw=0.7, zorder=20)
+            ax.add_patch(Circle((ax_, ay_), 9, fc="#1F2A36", ec="none", zorder=20))
+            ax.add_patch(Circle((col_x, ty), 42, fc="#1F2A36", ec="white", lw=1.0, zorder=21))
             ax.text(col_x, ty, str(n), color="white", ha="center", va="center", fontsize=9, fontweight="bold",
-                    zorder=8)
-
+                    zorder=22)
+    m3.draw_triad(ax, A, (x_lo + 60, y_lo + 40))
     ax.set_xlim(x_lo - 240, x_hi + 240)
     ax.set_ylim(y_lo - 40, y_hi + 60)
 
-    # legend panel
     lg = fig.add_axes([0.655, 0.05, 0.335, 0.86])
     lg.axis("off")
     lg.set_xlim(0, 1)
     lg.set_ylim(0, 1)
     items = [
         ("X 빔 · 볼스크류 SFU2010 · NEMA23", "강관 100×50×4, 행정 1,150 mm, 통 간 이동 + 드래그"),
-        ("X 캐리지 (HGH15 ×4)", "X 볼너트 로드셀 50 kg = 드래그 힘 F_x"),
-        ("Y 크로스슬라이드 (SFU1605)", "±80 mm 레인 이동 (제품: 이동 브리지)"),
-        ("Z 구동 (SFU1610 · NEMA17)", "스프링 브레이크 + counterbalance 1.05, 행정 400 mm"),
+        ("X 캐리지 (HGH15 ×4)  [X · 파랑]", "X 볼너트 로드셀 50 kg = 드래그 힘 F_x"),
+        ("Y 크로스슬라이드  [Y · 초록]", "포크형 Y 빔 2개 + 레일 + SFU1605 + NEMA17, ±80 mm 레인 이동"),
+        ("Z 구동판 · SFU1610 · NEMA17  [Z · 보라]", "스프링 브레이크 + counterbalance 1.05, 행정 400 mm"),
         ("Z 기둥 (강관 60×60×4)", "Z 볼너트 로드셀 20 kg = 표면 검출 3 N"),
-        ("스쿠핑 헤드", "θ 유성 기어드모터 ≥ 8 N·m, 평행링크, 드립 우산"),
+        ("스쿠핑 헤드  [θ · 주황]", "θ 유성 기어드모터 ≥ 8 N·m, 평행링크, 드립 우산"),
         ("식품 모듈", "스쿱 R35 · 스템 Ø30×3 · push-rod Ø8, 퀵핀 2개로 분리"),
-        ("통 ×3", "Ø230→Ø210 × 250, 데크 웰이 옆힘 구속"),
-        ("냉동고 + 304 데크", "통을 디핑 온도로 유지"),
+        ("통 ×3", "Ø230→Ø210 × 250, 레인 y = −40 / 0 / +40"),
+        ("냉동고 + 304 데크", "통을 디핑 온도로 유지, 데크 웰이 옆힘 구속"),
         ("컵 스테이션", "테두리 = 데크 높이, 1 kg 로드셀, 배출 빗"),
         ("헹굼 스테이션", "맛이 바뀌면 자동 헹굼"),
         ("컵 베이 2빔", "손 감지 → 전 축 STO (하드와이어)"),
@@ -246,8 +160,9 @@ def fig_axonometric():
         lg.text(0.065, y - 0.027, b, fontsize=8.2, va="top", color="#51606e")
     fig.text(0.012, 0.965, "Cartesian 자동 맛 선택 스쿠퍼 — 전체 구조 (V1)", fontsize=16, fontweight="bold",
              color=m.C_TEXT)
-    fig.text(0.012, 0.935, "직교 3축(X·Y·Z) + 로컬 피치 θ 1축 = 모터 4개. 자세: 피벗 C가 TUB2 위, 공격 자세 θ = −30°. "
-             "치수·하중은 설계값·가정값", fontsize=9.5, color="#51606e")
+    fig.text(0.012, 0.935, "직교 3축 X·Y·Z + 로컬 피치 θ = 모터 4개. 색: X 파랑 · Y 초록 · Z 보라 · θ 주황. "
+             "자세: 피벗 C가 TUB2의 레인 y = −40 위, 공격 자세 θ = −30°. 치수·하중은 설계값·가정값",
+             fontsize=9.5, color="#51606e")
     save(fig, "fig1_overall_axonometric.png")
 
 
@@ -322,15 +237,22 @@ def fig_three_view():
     for x0, x1 in m.POSTS_X:
         at.add_patch(Rectangle((x0, 185), x1 - x0, 80, fc=m.C_ALU, ec="#98A3AD"))
     at.add_patch(Rectangle((-200, 200), 1550, 50, fc=m.C_STEEL, ec=m.C_STEEL_D))
-    at.add_patch(Rectangle((Xc - 100, 160), 200, 40, fc=m.C_MOVE, ec="#1E4E80"))
-    at.add_patch(Rectangle((Xc - 80, -70), 160, 240, fc="#5C8FC8", ec="#1E4E80", alpha=0.55))
+    at.add_patch(Rectangle((Xc - 100, 160), 200, 40, fc=m.C_X, ec="#1E4E80"))
+    at.add_patch(Rectangle((Xc - 95, 170), 190, 30, fc="#16736A", ec="none"))
+    for x0 in (Xc - 90, Xc + 60):
+        at.add_patch(Rectangle((x0, m3.YB_Y[0]), 30, m3.YB_Y[1] - m3.YB_Y[0], fc=m.C_Y, ec="#0f5a52", lw=0.6))
+    at.plot([Xc + m3.YSCREW_DX] * 2, [m3.YB_Y[0] + 10, 170], color="#707b86", lw=1.4)
+    at.add_patch(Rectangle((Xc + m3.YSCREW_DX - 18, 170), 36, 60, fc="#2E3A46", ec="none"))
+    at.add_patch(Rectangle((Xc - 90, 30), 205, 50, fc=m.C_Y_L, ec="#0f5a52", lw=0.6, alpha=0.95))
+    at.add_patch(Rectangle((Xc - 40, 30), 80, 20, fc=m.C_Z_L, ec=m.C_Z, lw=0.6))
     at.add_patch(Rectangle((Xc - 30, -30), 60, 60, fc=m.C_STEEL, ec=m.C_STEEL_D))
     at.add_patch(Rectangle((1040, -300), 160, 8, fc=m.C_SENSOR, ec="none"))
     at.text(1215, -340, "컵 베이 개구 + 2빔", ha="left", va="center", fontsize=7.5, color=m.C_SENSOR)
     at.text(340, -150, "레인 y = −40 / 0 / +40", ha="center", fontsize=7, color="#6b5a2a")
     dim(at, (m.FREEZER_X[0], -270), (m.FREEZER_X[1], -270), -345, "냉동고 800 × 500")
-    at.annotate("", xy=(Xc + 95, -70), xytext=(Xc + 95, 170), arrowprops=dict(arrowstyle="<->", color="#1E4E80", lw=0.8))
-    at.text(Xc + 105, 150, "Y ±80", fontsize=7.5, color="#1E4E80", va="center", ha="left")
+    at.annotate("", xy=(Xc - 125, -80), xytext=(Xc - 125, 80), arrowprops=dict(arrowstyle="<|-|>", color=m.C_Y, lw=1.4))
+    at.text(Xc - 125, 92, "Y ±80", fontsize=8, color=m.C_Y, va="bottom", ha="center", fontweight="bold",
+            bbox=dict(fc="white", ec="none", pad=0.5))
     at.text(-400, 400, "평면도 (위에서, 뒤 = +Y)", fontsize=11, fontweight="bold", color=m.C_TEXT, va="top")
     at.text(-310, -285, "앞(작업자 쪽, −Y)", fontsize=7.5, color="#51606e")
     at.set_xlim(-420, 1720)
@@ -351,10 +273,15 @@ def fig_three_view():
                           fc="#EFDDA6", ec="none"))
     Rct(185, 265, m.FLOOR, 880, fc=m.C_ALU, ec="#98A3AD")
     Rct(200, 250, 760, 860, fc=m.C_STEEL, ec=m.C_STEEL_D)
-    Rct(160, 200, 735, 885, fc=m.C_MOVE, ec="#1E4E80")
-    Rct(-70, 170, 700, 735, fc="#5C8FC8", ec="#1E4E80")
-    Rct(35, 55, m.ZPLATE[0], m.ZPLATE[1], fc=m.C_MOVE_L, ec=m.C_MOVE)
-    Rct(35, 77, m.ZPLATE[1] - 45, m.ZPLATE[1], fc="#2E3A46", ec="none")
+    Rct(160, 200, 735, 885, fc=m.C_X, ec="#1E4E80")
+    Rct(170, 200, 700, 740, fc="#16736A", ec="none")
+    Rct(m3.YB_Y[0], m3.YB_Y[1], m3.YB_Z[0], m3.YB_Z[1], fc=m.C_Y, ec="#0f5a52")
+    Rct(170, 230, 694, 730, fc="#2E3A46", ec="none")
+    Rct(30, 80, 731, 746, fc=m.C_Y_L, ec="#0f5a52")
+    Rct(30, 50, m.ZPLATE[0], m.ZPLATE[1], fc=m.C_Z_L, ec=m.C_Z)
+    Rct(30, 72, m.ZPLATE[1] - 45, m.ZPLATE[1], fc="#2E3A46", ec="none")
+    asd.annotate("", xy=(-80, 690), xytext=(80, 690), arrowprops=dict(arrowstyle="<|-|>", color=m.C_Y, lw=1.4))
+    asd.text(-95, 690, "Y ±80", fontsize=7.5, color=m.C_Y, ha="right", va="center", fontweight="bold")
     cb = Zc + m.STEM + m.HEAD
     Rct(-30, 30, cb, cb + m.COL_LEN, fc=m.C_STEEL, ec=m.C_STEEL_D)
     for zb in m.ZBLOCKS:
@@ -380,8 +307,8 @@ def fig_three_view():
     note = fig.add_axes([0.785, 0.30, 0.205, 0.63])
     note.axis("off")
     notes = [
-        ("투영", "3각법 배치, 세 뷰 모두 같은 축척. 평면도는 정면도와 X가 맞춰져 있다."),
-        ("빔은 뒤, 기둥은 앞", "X 빔은 통 열보다 225 mm 뒤(Y 200–250)에 있다. Y 크로스슬라이드가 기둥을 레인 위(Y = 0 ± 80)로 내민다."),
+        ("투영", "3각법 배치, 세 뷰 모두 같은 축척. 평면도는 정면도와 X가 맞춰져 있다. 색: X 파랑 · Y 초록 · Z 보라."),
+        ("빔은 뒤, 기둥은 앞", "X 빔은 통 열보다 225 mm 뒤(Y 200–250)에 있다. Y 크로스슬라이드(포크형 Y 빔 2개, SFU1605, NEMA17, 초록)가 기둥을 레인 위(Y = 0 ± 80)로 내민다."),
         ("높이", "바닥 → 데크 850, 데크 → 빔 상단 860, Z 구동판 상단 1,175(데크 기준). 컵 테두리 = 데크 높이(매립)."),
         ("Z 위치", "Z_M = 피벗 C 높이. 이동 가능 +160 … −205, Z_SAFE 60 이상에서만 XY 이동."),
         ("통", "Ø230 → Ø210 × 250, 중심 X 340 / 600 / 860, 레인 y = −40 / 0 / +40."),
@@ -674,9 +601,130 @@ def fig_load_path():
     save(fig, "fig5_load_path.png")
 
 
+# =====================================================================================
+# Fig 6 — Y axis: cross-slide and scoop lanes
+# =====================================================================================
+def fig_y_axis():
+    import tub_lane_planner as tlp
+    fig = plt.figure(figsize=(16, 9))
+    fig.text(0.012, 0.965, "Y축 — 크로스슬라이드로 레인을 바꾼다", fontsize=16, fontweight="bold", color=m.C_TEXT)
+    fig.text(0.012, 0.935, "Y는 통 안에서 드래그 레인(y = −40 / 0 / +40)을 고르는 축이다. 드래그 자체는 항상 +X(빔 축). "
+             "숫자는 설계값·가정값(u, 밀도)", fontsize=9.5, color="#51606e")
+
+    # (a) 3D close-up with the Y stroke
+    ax = fig.add_axes([0.0, 0.05, 0.40, 0.85])
+    ax.set_aspect("equal")
+    ax.axis("off")
+    A = m3.Axo(28.0, 24.0)
+    X, Z, TH = 340.0, 60.0, -30.0
+    m3.draw_floor(ax, A)
+    A.draw(ax, m3.base_faces(A), 1)
+    m3.draw_tubs(ax, A)
+    # lanes drawn on the TUB1 surface
+    s0 = m.FLAVORS[0][3]
+    for yl in (-40.0, 0.0, 40.0):
+        half = tlp.lane_length(yl, -s0, 24.0) / 2
+        q = A.pts([(X - half, yl, s0), (X + half, yl, s0)])
+        ln, = ax.plot(q[:, 0], q[:, 1], color=m.C_Y, lw=2.0, ls=(0, (4, 2)), zorder=2.3)
+        ln.set_clip_path(Polygon(A.rim_ellipse(340, 0, 0, 115), closed=True, transform=ax.transData))
+    for yg in (80.0, -80.0):                                   # ghosts at the stroke ends
+        A.draw(ax, m3.carriage_faces(A, X, yg, Z, TH), 3, alpha=0.18)
+        A.draw(ax, m3.food_faces(A, X, yg, Z, TH), 3.1, alpha=0.18)
+    Y0 = -40.0
+    A.draw(ax, m3.carriage_faces(A, X, Y0, Z, TH), 4)
+    A.draw(ax, m3.food_faces(A, X, Y0, Z, TH), 5)
+    m3.draw_scoop3d(ax, A, X, Y0, Z, TH, zorder=6)
+    m3.draw_axis_arrows(ax, A, X, Y0, Z, active=("Y",), fs=12)
+    for yg, lab, dx_, ha in ((80.0, "Y = +80 (행정 끝)", 70, "left"), (-80.0, "Y = −80 (행정 끝)", -70, "right")):
+        q = A.proj((X + (60 if dx_ > 0 else -60), yg, Z + m.STEM + 95))
+        ax.text(q[0] + dx_ * 0.3, q[1], lab, fontsize=8.5, color=m.C_Y, ha=ha, va="center", zorder=14,
+                bbox=dict(fc="white", ec="none", alpha=0.85, pad=1))
+    q = A.proj((X + 150, -40, s0))
+    ax.text(q[0] + 10, q[1] - 30, "레인 y = −40 / 0 / +40", fontsize=8.5, color=m.C_Y, zorder=14,
+            bbox=dict(fc="white", ec="none", alpha=0.85, pad=1))
+    P = A.pts([(100, -300, -200), (700, -300, -200), (100, 300, 1200), (700, 300, 1200)])
+    ax.set_xlim(P[:, 0].min() - 60, P[:, 0].max() + 40)
+    ax.set_ylim(P[:, 1].min(), P[:, 1].max())
+    ax.text(0.02, 0.98, "(a) Y 크로스슬라이드 — 실선: 레인 y = −40 위, 흐린 그림: 행정 끝 ±80", transform=ax.transAxes,
+            fontsize=10, fontweight="bold", va="top", color=m.C_TEXT)
+
+    # (b) top view of TUB1 with lanes
+    bt = fig.add_axes([0.41, 0.08, 0.30, 0.80])
+    bt.set_aspect("equal")
+    TX = 340.0
+    r_s = m.tub_half_width(s0)
+    bt.add_patch(Circle((TX, 0), 115, fc="#F4F1EA", ec="#6f6656", lw=1.0))
+    bt.add_patch(Circle((TX, 0), r_s, fc="#EFDDA6", ec="none"))
+    d = tlp.depth_at_force_limit(90.0)
+    for yl, col in ((-40.0, m.C_Y), (0.0, m.C_Y), (40.0, m.C_Y)):
+        L = tlp.lane_length(yl, -s0, d)
+        w = tlp.cut_width(d)
+        x0, x1 = TX - L / 2, TX + L / 2
+        bt.add_patch(Rectangle((x0 - 17.5, yl - w / 2), L + 35, w, fc=col, alpha=0.12, ec="none"))
+        bt.annotate("", xy=(x1, yl), xytext=(x0, yl), arrowprops=dict(arrowstyle="-|>", color=col, lw=2.0))
+        bt.plot([x0], [yl], marker="o", ms=5, color=col)
+        bt.text(x1 + 6, yl, f"{L:.0f} mm", fontsize=9, va="center", color=m.C_TEXT)
+        bt.text(x0 - 22, yl, "y = 0" if yl == 0 else f"y = {yl:+.0f}", fontsize=9, va="center", ha="right", color=col,
+                fontweight="bold")
+    rc = r_s - m.R - cm.WALL_MARGIN
+    bt.add_patch(Circle((TX, 0), rc, fc="none", ec=m.C_SENSOR, lw=0.9, ls="--"))
+    bt.text(TX, -rc - 6, f"피벗 C가 머물 수 있는 원 (반경 {rc:.0f})", fontsize=8, color=m.C_SENSOR, ha="center", va="top")
+    bt.annotate("", xy=(TX + 80, -110), xytext=(TX - 80, -110), arrowprops=dict(arrowstyle="-|>", color=m.C_X, lw=1.6))
+    bt.text(TX, -125, "드래그 방향 = +X (항상)", fontsize=8.5, color=m.C_X, ha="center", va="top")
+    bt.text(TX - 112, 108, f"절삭 폭 ≈ {tlp.cut_width(d):.0f} mm > 레인 간격 40 mm\n→ 레인끼리 겹친다", fontsize=8.5,
+            va="top", color=m.C_TEXT)
+    bt.set_xlim(TX - 175, TX + 165)
+    bt.set_ylim(-150, 125)
+    bt.set_xticks([])
+    bt.set_yticks([])
+    for sp in bt.spines.values():
+        sp.set_color("#c3ccd5")
+    bt.set_title(f"(b) TUB1 평면 — 표면 −62 mm, 깊이 {d:.1f} mm에서 레인 길이", fontsize=10, fontweight="bold", loc="left")
+
+    # (c) one-stroke mass per lane at the force target (u = 90 kPa design case)
+    ac = fig.add_axes([0.765, 0.50, 0.22, 0.36])
+    lanes = [0.0, 20.0, 40.0]
+    ms = [tlp.portion_at_force_limit(90.0, y, -s0)[3] for y in lanes]
+    xs = np.arange(len(lanes))
+    ac.bar(xs, ms, width=0.55, color=m.C_Y, zorder=3)
+    for x_, v in zip(xs, ms):
+        ac.text(x_, v + 2, f"{v:.0f} g", ha="center", va="bottom", fontsize=9, color=m.C_TEXT)
+    ac.axhline(115, color="#34495e", lw=1.0, zorder=4)
+    ac.axhline(115 * 0.95, color="#34495e", lw=0.8, ls="--", zorder=4)
+    ac.text(2.35, 116, "목표 115 g", fontsize=8, color="#34495e", ha="right", va="bottom")
+    ac.text(2.35, 115 * 0.95 - 1, "허용 −5 %", fontsize=8, color="#34495e", ha="right", va="top")
+    ac.set_xticks(xs, ["y = 0", "y = ±20", "y = ±40"])
+    ac.set_ylim(0, 140)
+    ac.set_ylabel("한 스쿱 질량 [g]", fontsize=9)
+    ac.tick_params(labelsize=8.5)
+    ac.grid(axis="y", color=m.C_GRID, lw=0.5, zorder=0)
+    for sp in ("top", "right"):
+        ac.spines[sp].set_visible(False)
+    ac.set_title("(c) 레인별 한 스쿱 (u = 90 kPa, F ≤ 110 N)", fontsize=10, fontweight="bold", loc="left")
+
+    tx = fig.add_axes([0.745, 0.05, 0.245, 0.38])
+    tx.axis("off")
+    rows = [("u [kPa]", "y = 0", "±20", "±40")]
+    for u in (40.0, 90.0, 160.0):
+        rows.append((f"{u:.0f}",) + tuple(f"{tlp.portion_at_force_limit(u, y, -s0)[3]:.0f} g" for y in lanes))
+    for i, r in enumerate(rows):
+        for j, c in enumerate(r):
+            tx.text(0.02 + j * 0.24, 0.98 - i * 0.085, c, fontsize=9, va="top",
+                    fontweight="bold" if i == 0 else "normal", color=m.C_TEXT)
+    tx.text(0.02, 0.60, "· 옆 레인(±40)은 통 벽 때문에 가운데보다 ~27 mm 짧다\n"
+            "  → 무른 제품(40 kPa)에서도 106 g로 허용범위 밖\n"
+            "· 겹침 때문에 나중에 뜨는 레인은 이 값보다 더 적다\n"
+            "· 선택지(E0 뒤): 레인 ±20으로 좁힘 / 옆 레인 2 stroke /\n"
+            "  스쿱 R 증대 / 힘 목표 재설정 / 저울로 보정",
+            fontsize=8.6, va="top", color="#3b4650", linespacing=1.55)
+    tx.text(0.02, 0.07, "calc/output/tub_lane_planner.md §4", fontsize=8, color="#7a8793", va="bottom")
+    save(fig, "fig6_y_axis_lanes.png")
+
+
 if __name__ == "__main__":
     fig_axonometric()
     fig_three_view()
     fig_head()
     fig_sequence()
     fig_load_path()
+    fig_y_axis()

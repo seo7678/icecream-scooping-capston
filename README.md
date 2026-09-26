@@ -12,7 +12,7 @@
 
 ## 현재 기준안 (2026-09)
 
-![작동 동영상](media/operation.gif)
+![작동 동영상 (3D, X·Y·Z·θ)](media/operation_3d.gif)
 
 ![전체 구조](media/fig1_overall_axonometric.png)
 

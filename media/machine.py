@@ -73,8 +73,11 @@ FLAVORS = [
 C_STEEL = "#8C96A0"
 C_STEEL_D = "#5E6770"
 C_ALU = "#B9C2CA"
-C_MOVE = "#2F6FB0"        # moving axes
+C_MOVE = "#2F6FB0"        # moving axes (X carriage)
 C_MOVE_L = "#9CC0E6"
+# axis colour code used in every drawing: X blue, Y green, Z purple, theta orange
+C_X, C_Y, C_Z, C_TH = "#2F6FB0", "#1F9A8A", "#7A5CC2", "#E07B00"
+C_Y_L, C_Z_L = "#8FD3C7", "#CFC2EE"
 C_HEAD = "#3C4B5C"
 C_FOOD = "#D98E04"        # food-zone stainless highlight
 C_SENSOR = "#D1343A"
@@ -231,18 +234,27 @@ def draw_frame_static(ax, surfaces=None, tub_profiles=None, show_cup=True, cup_f
 
 
 def draw_carriage(ax, X, Z, th, fill=0.0, ball=False, ice="#EFDDA6", detail=True):
-    """X carriage, Y slide, Z drive plate and blocks at X; Z column + head at pivot height Z."""
-    # X carriage plate on the beam
-    ax.add_patch(Rectangle((X - 100, 735), 200, 150, fc=C_MOVE, ec="#1E4E80", lw=1.0, zorder=3.4))
-    # Z drive plate (on the Y slide), blocks, Z screw + motor
-    ax.add_patch(Rectangle((X - 70, ZPLATE[0]), 140, ZPLATE[1] - ZPLATE[0], fc=C_MOVE_L, ec=C_MOVE, lw=0.9, zorder=3.6))
-    ax.plot([X + 50, X + 50], [ZPLATE[0] + 15, ZPLATE[1] - 45], color="#5B6B7B", lw=2.4, zorder=4.4, dashes=(2.5, 1))
-    ax.add_patch(Rectangle((X + 30, ZPLATE[1] - 45), 42, 45, fc="#2E3A46", ec="none", zorder=4.5))
+    """Front elevation of the moving parts at X and pivot height Z (looking along +Y).
+
+    Colour code: X carriage blue, Y cross-slide green (two Y beams seen end-on,
+    slider plate), Z drive plate purple, Z column steel.
+    """
+    # X carriage on the beam
+    ax.add_patch(Rectangle((X - 100, 735), 200, 150, fc=C_X, ec="#1E4E80", lw=1.0, zorder=3.4))
+    # Y cross-slide: bracket, two Y beams end-on (fork), slider plate, Y motor
+    ax.add_patch(Rectangle((X - 95, 700), 190, 40, fc="#16736A", ec="none", zorder=3.45))
+    for x0 in (X - 90, X + 60):
+        ax.add_patch(Rectangle((x0, 700), 30, 25, fc=C_Y, ec="#0f5a52", lw=0.8, zorder=3.7))
+    ax.add_patch(Rectangle((X - 90, 725), 205, 15, fc=C_Y_L, ec="#0f5a52", lw=0.8, zorder=3.75))
+    ax.add_patch(Rectangle((X + 87, 694), 36, 36, fc="#2E3A46", ec="none", zorder=3.8))
+    # Z drive plate (on the Y slider), Z motor on top
+    ax.add_patch(Rectangle((X - 40, ZPLATE[0]), 80, ZPLATE[1] - ZPLATE[0], fc=C_Z_L, ec=C_Z, lw=0.9, zorder=3.6))
+    ax.add_patch(Rectangle((X - 21, ZPLATE[1] - 45), 42, 45, fc="#2E3A46", ec="none", zorder=4.5))
     draw_head(ax, X, Z, th, fill=fill, ball=ball, ice=ice, detail=detail, z=5)
     for zb in ZBLOCKS:
         ax.add_patch(Rectangle((X - 38, zb - 12), 76, 24, fc="#26313D", ec="none", zorder=7))
     # Z nut + load cell (moves with the column)
     col_bottom = Z + STEM + HEAD
-    ax.add_patch(Rectangle((X + 36, col_bottom + COL_LEN - 70), 28, 22, fc=C_SENSOR, ec="none", zorder=7))
+    ax.add_patch(Rectangle((X + 30, col_bottom + COL_LEN - 70), 22, 22, fc=C_SENSOR, ec="none", zorder=7))
     # X nut load cell
     ax.add_patch(Rectangle((X - 14, 800), 28, 20, fc=C_SENSOR, ec="none", zorder=7))

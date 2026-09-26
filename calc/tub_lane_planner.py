@@ -76,54 +76,105 @@ def depth_for_portion(travel):
     return None, a, v
 
 
-p("# Tub workspace & lane planner — generated")
-p("")
-p(f"> `python3 calc/tub_lane_planner.py`. 통 Ø{cm.TUB_D_TOP:.0f}→Ø{cm.TUB_D_BOTTOM:.0f} × {cm.TUB_DEPTH:.0f} mm, 스쿱 R {cm.R_SCOOP:.0f}, 공격각 {ALPHA:.0f}°, dive 경로각 {BETA_DIVE:.0f}°, 벽 여유 {cm.WALL_MARGIN:.0f} mm, 목표 {V_TARGET/1e3:.0f} cm³(115 g). **모두 ASSUMPTION.**")
-p("")
-p("## 1. 레인별 허용 드래그 길이와 1 portion에 필요한 깊이")
-p("")
-rows = []
-for s, label in ((20.0, "새 통"), (125.0, "절반"), (220.0, "거의 빈 통")):
-    for y in (0.0, 40.0):
-        L = lane_length(y, s, 25.0)
-        d, a, v = depth_for_portion(L)
-        if d is None:
-            rows.append([label, f"{s:.0f}", f"±{y:.0f}", f"{L:.0f}", "불가(최대 깊이에서도 미달)", f"{a:.0f}", f"{v/V_TARGET*100:.0f} %", "–", "–"])
-        else:
-            f90, f160 = U_CASES[0] * 1e-3 * a, U_CASES[1] * 1e-3 * a
-            rows.append([label, f"{s:.0f}", f"±{y:.0f}", f"{L:.0f}", f"{d:.1f}", f"{a:.0f}", "100 %", f"{f90:.0f}", f"{f160:.0f}"])
-table(["수위", "표면 깊이 [mm]", "레인 y", "허용 이동 [mm]", "필요 깊이 d [mm]", "절삭단면 A [mm²]", "달성 부피", "F @ 90 kPa [N]", "F @ 160 kPa [N]"], rows)
-p("해석:")
-p("- 레거시 가정(stroke 182–195 mm, d = 20–22 mm)은 **통 벽 여유를 반영하지 않은 값**이었다. Ø230 통에서 R35 스쿱의 중심 레인은 ~140 mm, 옆 레인(±40)은 ~115 mm만 쓸 수 있다.")
-p("- 그래서 1 portion에 필요한 깊이가 커지고, 드래그 힘 F = u·A가 레거시 가정보다 커진다. 통이 줄수록(테이퍼) 레인이 더 짧아진다.")
-p("- 선택지: (a) 깊게 1회(힘↑), (b) 2회 stroke(시간↑), (c) 스쿱 R 축소는 오히려 portion↓, (d) 공격각 α를 줄여 최대 깊이(R·cos α)를 늘림. → **E3/E4에서 α와 d를 요인으로 넣는다.**")
-p("")
+F_TARGET = 110.0                  # N, drag force target (0.55 x 200 N, A37)
+D_MAX = 28.0                      # mm, flavour depth limit (vanilla example)
+M_TARGET = 115.0                  # g
+RHO = 0.65                        # g/cm^3 (A07)
 
-p("## 2. 레인 패턴 — 한 지점만 파이는 문제")
-p("")
-w = cut_width(25.0)
-p(f"깊이 25 mm에서 절삭 폭 ≈ {w:.0f} mm. 드래그 방향이 +X로 고정(요 축 없음)이므로 비교 결과는 다음과 같다.")
-p("")
-table(["패턴", "필요 축", "표면 평탄 유지", "구현", "판정"], [
-    ["한 좌표 반복", "–", "✘ 한 줄만 깊게 파임(구덩이)", "최저", "**금지**"],
-    ["래스터 레인(층별 평삭)", "X, Y(레인 이동)", "● 층 단위로 고르게 내려감", "레인 인덱스 + 층 카운터", "**채택**"],
-    ["그리드 시작점", "X, Y", "○ 래스터와 사실상 같음(시작 x만 다름)", "같음", "래스터에 포함"],
-    ["나선/방사", "X, Y + **요(yaw) 회전**", "●", "스쿱 방향을 바꿔야 함 → 축 추가", "기각(축 증가)"],
-])
-lanes = [-40.0, 0.0, 40.0]
-p(f"기본 패턴(ASSUMPTION): 한 층 = 레인 y = {lanes} 순환(겹침 {w-40:.0f} mm), 레인마다 시작 x를 허용 구간의 앞쪽 끝에 둔다. 층이 끝나면 다음 층(표면이 약 d만큼 내려감). 각 스쿱 시작 전에 **1점 터치오프**로 실제 표면을 확인하고, 기계는 자기가 깎은 이력으로 셀 높이 지도(10 mm 격자)를 갱신한다(비전 없음).")
-p("")
 
-p("## 3. 통 1개에서 기계가 뜰 수 있는 양")
-p("")
-r_top, r_bot = cm.TUB_D_TOP / 2, cm.TUB_D_BOTTOM / 2
-v_tub = math.pi * cm.TUB_DEPTH / 3 * (r_top ** 2 + r_top * r_bot + r_bot ** 2)
-reach = (r_top - cm.R_SCOOP - cm.WALL_MARGIN + w / 2) / r_top
-p(f"- 통 부피 ≈ {v_tub/1e6:.1f} L (가정 치수), 115 g portion ≈ {v_tub/V_TARGET:.0f}개 분량")
-p(f"- 기계 도달 반경 ≈ 벽에서 {r_top*(1-reach):.0f} mm 안쪽까지 → 면적 기준 ≈ {reach**2*100:.0f} %, 바닥 여유 {cm.FLOOR_MARGIN:.0f} mm 제외")
-p(f"- → 면적 기준 상한으로는 통 하나에서 약 {reach**2*(1-cm.FLOOR_MARGIN/cm.TUB_DEPTH)*v_tub/V_TARGET:.0f}개. 레인 끝(C 이동 범위 ± rim 폭)과 테이퍼까지 넣은 5 mm 격자 시뮬레이션(`calc/output/scoop_mechanism_compare.md`)은 **약 30개(통 부피의 59 %)** 다. 범위 30–43개로 본다.")
-p("- **벽 쪽 링은 사람이 정리**해야 한다(통 교체 시 또는 주기적으로). 이 비율은 실측 통 치수와 E3 실측 절삭 형상으로 다시 계산한다.")
+def depth_at_force_limit(u_kpa, f_target=F_TARGET, d_max=D_MAX):
+    """Deepest cut whose drag force u*A(d) stays at or below the force target."""
+    d = d_max
+    while d > 1.0 and u_kpa * 1e-3 * cm.swept_area(-ALPHA, d) > f_target:
+        d -= 0.05
+    return d
 
-with open(OUT, "w", encoding="utf-8") as f:
-    f.write("\n".join(lines) + "\n")
-print(f"wrote {OUT}")
+
+def portion_at_force_limit(u_kpa, y, surface_depth):
+    """One stroke in lane y with depth adaptation holding F <= F_TARGET: (d, lane, V mm^3, mass g)."""
+    d = depth_at_force_limit(u_kpa)
+    L = lane_length(y, surface_depth, d)
+    v, _ = stroke_volume(d, L)
+    return d, L, v, RHO * v / 1e3
+
+
+def main():
+    p("# Tub workspace & lane planner — generated")
+    p("")
+    p(f"> `python3 calc/tub_lane_planner.py`. 통 Ø{cm.TUB_D_TOP:.0f}→Ø{cm.TUB_D_BOTTOM:.0f} × {cm.TUB_DEPTH:.0f} mm, 스쿱 R {cm.R_SCOOP:.0f}, 공격각 {ALPHA:.0f}°, dive 경로각 {BETA_DIVE:.0f}°, 벽 여유 {cm.WALL_MARGIN:.0f} mm, 목표 {V_TARGET/1e3:.0f} cm³(115 g). **모두 ASSUMPTION.**")
+    p("")
+    p("## 1. 레인별 허용 드래그 길이와 1 portion에 필요한 깊이")
+    p("")
+    rows = []
+    for s, label in ((20.0, "새 통"), (125.0, "절반"), (220.0, "거의 빈 통")):
+        for y in (0.0, 40.0):
+            L = lane_length(y, s, 25.0)
+            d, a, v = depth_for_portion(L)
+            if d is None:
+                rows.append([label, f"{s:.0f}", f"±{y:.0f}", f"{L:.0f}", "불가(최대 깊이에서도 미달)", f"{a:.0f}", f"{v/V_TARGET*100:.0f} %", "–", "–"])
+            else:
+                f90, f160 = U_CASES[0] * 1e-3 * a, U_CASES[1] * 1e-3 * a
+                rows.append([label, f"{s:.0f}", f"±{y:.0f}", f"{L:.0f}", f"{d:.1f}", f"{a:.0f}", "100 %", f"{f90:.0f}", f"{f160:.0f}"])
+    table(["수위", "표면 깊이 [mm]", "레인 y", "허용 이동 [mm]", "필요 깊이 d [mm]", "절삭단면 A [mm²]", "달성 부피", "F @ 90 kPa [N]", "F @ 160 kPa [N]"], rows)
+    p("해석:")
+    p("- 레거시 가정(stroke 182–195 mm, d = 20–22 mm)은 **통 벽 여유를 반영하지 않은 값**이었다. Ø230 통에서 R35 스쿱의 중심 레인은 ~140 mm, 옆 레인(±40)은 ~115 mm만 쓸 수 있다.")
+    p("- 그래서 1 portion에 필요한 깊이가 커지고, 드래그 힘 F = u·A가 레거시 가정보다 커진다. 통이 줄수록(테이퍼) 레인이 더 짧아진다.")
+    p("- 선택지: (a) 깊게 1회(힘↑), (b) 2회 stroke(시간↑), (c) 스쿱 R 축소는 오히려 portion↓, (d) 공격각 α를 줄여 최대 깊이(R·cos α)를 늘림. → **E3/E4에서 α와 d를 요인으로 넣는다.**")
+    p("")
+
+    p("## 2. 레인 패턴 — 한 지점만 파이는 문제")
+    p("")
+    w = cut_width(25.0)
+    p(f"깊이 25 mm에서 절삭 폭 ≈ {w:.0f} mm. 드래그 방향이 +X로 고정(요 축 없음)이므로 비교 결과는 다음과 같다.")
+    p("")
+    table(["패턴", "필요 축", "표면 평탄 유지", "구현", "판정"], [
+        ["한 좌표 반복", "–", "✘ 한 줄만 깊게 파임(구덩이)", "최저", "**금지**"],
+        ["래스터 레인(층별 평삭)", "X, Y(레인 이동)", "● 층 단위로 고르게 내려감", "레인 인덱스 + 층 카운터", "**채택**"],
+        ["그리드 시작점", "X, Y", "○ 래스터와 사실상 같음(시작 x만 다름)", "같음", "래스터에 포함"],
+        ["나선/방사", "X, Y + **요(yaw) 회전**", "●", "스쿱 방향을 바꿔야 함 → 축 추가", "기각(축 증가)"],
+    ])
+    lanes = [-40.0, 0.0, 40.0]
+    p(f"기본 패턴(ASSUMPTION): 한 층 = 레인 y = {lanes} 순환(겹침 {w-40:.0f} mm), 레인마다 시작 x를 허용 구간의 앞쪽 끝에 둔다. 층이 끝나면 다음 층(표면이 약 d만큼 내려감). 각 스쿱 시작 전에 **1점 터치오프**로 실제 표면을 확인하고, 기계는 자기가 깎은 이력으로 셀 높이 지도(10 mm 격자)를 갱신한다(비전 없음).")
+    p("")
+
+    p("## 3. 통 1개에서 기계가 뜰 수 있는 양")
+    p("")
+    r_top, r_bot = cm.TUB_D_TOP / 2, cm.TUB_D_BOTTOM / 2
+    v_tub = math.pi * cm.TUB_DEPTH / 3 * (r_top ** 2 + r_top * r_bot + r_bot ** 2)
+    reach = (r_top - cm.R_SCOOP - cm.WALL_MARGIN + w / 2) / r_top
+    p(f"- 통 부피 ≈ {v_tub/1e6:.1f} L (가정 치수), 115 g portion ≈ {v_tub/V_TARGET:.0f}개 분량")
+    p(f"- 기계 도달 반경 ≈ 벽에서 {r_top*(1-reach):.0f} mm 안쪽까지 → 면적 기준 ≈ {reach**2*100:.0f} %, 바닥 여유 {cm.FLOOR_MARGIN:.0f} mm 제외")
+    p(f"- → 면적 기준 상한으로는 통 하나에서 약 {reach**2*(1-cm.FLOOR_MARGIN/cm.TUB_DEPTH)*v_tub/V_TARGET:.0f}개. 레인 끝(C 이동 범위 ± rim 폭)과 테이퍼까지 넣은 5 mm 격자 시뮬레이션(`calc/output/scoop_mechanism_compare.md`)은 **약 30개(통 부피의 59 %)** 다. 범위 30–43개로 본다.")
+    p("- **벽 쪽 링은 사람이 정리**해야 한다(통 교체 시 또는 주기적으로). 이 비율은 실측 통 치수와 E3 실측 절삭 형상으로 다시 계산한다.")
+
+
+    p("")
+    p("## 4. 힘 목표를 지킬 때 레인별 한 스쿱 질량 (Y 레인의 한계)")
+    p("")
+    p(f"드래그 중 깊이 적응으로 F ≤ {F_TARGET:.0f} N을 지키면 깊이가 u에 따라 제한된다(맛별 d_max {D_MAX:.0f} mm). "
+      f"그 깊이에서 레인 길이만큼 한 번 끌었을 때의 질량(밀도 {RHO} g/cm³). 목표 {M_TARGET:.0f} g, 허용 −5 % = "
+      f"{M_TARGET * 0.95:.0f} g. **u·밀도 모두 가정값.**")
+    p("")
+    rows = []
+    for s_, label in ((20.0, "새 통"), (62.0, "예시 (−62)"), (125.0, "절반")):
+        for u in (40.0, 90.0, 160.0):
+            cells = [label, f"{u:.0f}"]
+            for y in (0.0, 20.0, 40.0):
+                d, L, v, mass = portion_at_force_limit(u, y, s_)
+                mark = "" if mass >= M_TARGET * 0.95 else " ✘"
+                cells.append(f"{mass:.0f} g ({L:.0f} mm, d {d:.1f}){mark}")
+            rows.append(cells)
+    table(["수위", "u [kPa]", "레인 y = 0", "y = ±20", "y = ±40"], rows)
+    p("해석:")
+    p("- **옆 레인(±40)은 통 벽 때문에 가운데 레인보다 약 25–30 mm 짧다.** u가 작아 힘 목표가 걸리지 않아도(40 kPa) 새 통에서만 겨우 경계(110 g)이고, 수위가 내려가면 허용범위에 못 미친다.")
+    p("- u = 90 kPa에서는 힘 목표(110 N) 때문에 깊이가 ~24 mm로 제한되어 **가운데 레인도 경계**다.")
+    p("- 레인 겹침(40 mm 간격 < 절삭 폭 ~66 mm) 때문에 같은 층에서 나중에 뜨는 레인은 이미 깎인 부분만큼 더 적게 담긴다(이 표는 겹침 전 값).")
+    p("- 선택지(E0 뒤 결정): 레인 간격을 ±20으로 좁힘(층 폭↓, 벽 링↑) / 옆 레인은 2 stroke / 스쿱 R 증대 / 힘 목표 재설정 / portion을 저울로 보정.")
+
+    with open(OUT, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    print(f"wrote {OUT}")
+
+
+if __name__ == "__main__":
+    main()
