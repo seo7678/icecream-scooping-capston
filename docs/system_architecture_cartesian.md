@@ -1,6 +1,6 @@
 # System Architecture — Cartesian Automatic Flavor-Selection Scooper
 
-> 이 문서는 새 기준 아키텍처다. 작업자가 헤드를 직접 옮기던 이전 구조는 **Legacy Architecture M(수동 위치지정)** 으로 남기고(docs/11, 12, concept_brief), 비교는 `architecture_comparison.md`에 있다.
+> 이 문서는 새 기준 아키텍처다. 권장안 요약과 결정 게이트는 `final_system_concept.md`. 작업자가 헤드를 직접 옮기던 이전 구조는 **Legacy Architecture M(수동 위치지정)** 으로 남기고(docs/11, 12, concept_brief), 비교는 `architecture_comparison.md`에 있다.
 > 숫자는 `calc/`의 **가정 하중·가정 치수** 결과다. 실측 전에는 결과가 아니라 설계 입력으로만 읽는다.
 
 ## 1. 한 줄 정의
@@ -97,7 +97,7 @@ FLAVOR SELECT → LOOKUP (통 좌표 + 레인 + 표면 추정) → CHECK CUP (�
 | 7 | Cartesian이 로봇팔보다 정말 싸고 단순한가? | **예(구조·가격).** 액추에이터 4 vs 6–7, V1 BOM 추정 ~524만 원(냉동고 포함, 빌리면 ~479만 원) vs 협동로봇 본체만 4,400만 원대. 대가: 통 배치를 기계에 맞춰야 하고 기존 캐비닛에 넣을 수 없다 | research/components.md §6, BOM |
 | 8 | 스쿠핑 반력을 XY 레일이 견디는가? | **용량은 충분(블록당 0.54 kN vs C0 17 kN), 강성이 문제.** 3D 프린터식은 200 N에서 스쿱 끝이 8–11 mm 밀림. 강관 기둥 + HG15 + 강관 빔 + 볼스크류 + Ø30 스템이면 ~1.0 mm | gantry_load_path.md |
 | 9 | 표준 통을 그대로 쓸 수 있는가? | **예, 조건부.** 통은 데크 웰에 고정(옆힘 200 N), 벽 keep-out 때문에 기계는 통 부피의 약 60–80 %(격자 시뮬레이션 59 %, 면적 추정 83 %)만 뜨고 벽 링은 사람이 정리, 테이퍼 때문에 아래로 갈수록 레인이 짧아짐 | tub_lane_planner.md §1, §3, scoop_mechanism_compare.md |
-| 10 | 식품 위를 움직이는 갠트리의 위생 | 모든 레일·스크류·벨트를 **드립 차단면 위**에 두고, X 빔 아래 이동형 드립 트레이, Z 기둥 벨로즈, 밀폐 헤드, NSF H1 윤활, 식품 모듈 공구 없는 분리 | sanitation_architecture.md |
+| 10 | 식품 위를 움직이는 갠트리의 위생 | 모든 레일·스크류·벨트를 **드립 차단층 위**에 둔다: X 빔 전장 고정 드립 트레이, Y 이동 트레이, Z 기둥 벨로즈, 헤드 드립 우산. 밀폐 헤드, NSF H1 윤활, 식품 모듈 공구 없는 분리 | sanitation_architecture.md |
 
 ## 7. 축 구성과 구동계 (V1)
 
@@ -138,5 +138,6 @@ FLAVOR SELECT → LOOKUP (통 좌표 + 레인 + 표면 추정) → CHECK CUP (�
 | 반력 경로 | gantry_load_path.md |
 | 충돌·안전 | collision_and_safety.md |
 | 위생 | sanitation_architecture.md |
+| 스쿠핑 원리 비교(끌기 vs 클램셸 등) | scooping_head_mechanism.md §3, calc/output/scoop_mechanism_compare.md |
 | 선행기술 재검색 | updated_prior_art.md |
-| 최종 답 | final_system_concept.md |
+| **최종 요약·권장안·게이트** | **final_system_concept.md** |

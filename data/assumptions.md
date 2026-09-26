@@ -33,3 +33,25 @@
 | A22 | 설계 수명 사이클 | 2 × 10⁶ (10³/일 × 5년) | A18 상한 | L | – | 13 §6 | – |
 | A23 | 하드웨어 힘 상한 | 200 N | A01 hard 케이스 + 여유 | **H** (안전·성능) | P1 결과로 재설정 | 13 §3, 19 | – |
 | A24 | 사람 스쿱 사이클타임 | 자료 없음 → 기준 없이 "수동 중앙값 +20 % 이내"로 요구 | – | M | P0-1, P0-2 | 08, 17 | – |
+
+## Cartesian 아키텍처 추가 가정 (2026-09)
+
+공통 값은 `calc/cartesian_model.py` 한 곳에 있고, 모든 Cartesian 스크립트가 이를 가져다 쓴다. A11(stroke 190 mm)은 통 벽 여유를 빠뜨린 값이라, Cartesian에서는 `tub_lane_planner.py`가 계산한 레인 길이 90–140 mm로 대체한다.
+
+| ID | 변수 | 가정값 | 근거 | 민감도 | 측정 방법 | 사용처 | 측정값 |
+|---|---|---|---|---|---|---|---|
+| A25 | 공격 자세 θ_s | −30°(개구부 앞-아래) | 볼 뒷면이 절삭 터널 밖으로 나가지 않는 기하 조건. 힘 근거 없음 | **H** | E0 확장(P0-3 §7): 0° vs −30° | cartesian_model, 전 Cartesian 계산 | – |
+| A26 | 통 테이퍼 하단 내경 | Ø210 mm(상단 A10 Ø230) | 근거 없음 | M | P0-4 실측 | tub_lane_planner, scoop_mechanism_compare | – |
+| A27 | 벽·바닥 여유 | 각 10 mm | 설계 선택 | M | V1a 충돌 여유 확인 | keep-out, 레인 길이 | – |
+| A28 | 옆힘 / 수직력 비 | F_y = 0.3 F_x, \|F_z\| = 0.5 F_x | A04 확장, 근거 없음 | M | E0 확장(저울로 F_z), V1a 로드셀 | scoop_load_path | – |
+| A29 | 가동 질량 | Z 7.3 / X 11.8 / Y(제품 브리지) 20.8 kg | 부품 합산 추정 | M | 칭량 | gantry_motor_sizing, z_axis_sizing, cycle | – |
+| A30 | 헤드 길이, 레버 | 헤드 100 mm, 최심 스쿱 레버 807 mm | 배치 설계값(A12 스템 300 mm 포함) | **H**(강성) | CAD 확정 | scoop_load_path | – |
+| A31 | Z_SAFE 여유, 컵 테두리 높이 | 25 mm, 컵 매립 0 / 올림 80 mm → Z_SAFE 60 / 140 mm | 설계 선택 | M | V1b 배치 | 상태기계, cycle | – |
+| A32 | 축 속도·가속도·체류 | XY 250 mm/s·1 m/s², Z 150, 프로브 10, 드래그 80 mm/s, 닫기 0.8 s, 배출 1.2 s, 저울 안정 1 s | 선정 구동계 기준 추정 | M | V1b 로그 | cycle_time_estimate | – |
+| A33 | 압입 압력 p | 0.3–1 MPa | A01 근거의 프로브 압력 자릿수 | M | V1a 터치오프 반복성 | z_axis_sizing(표면 검출 오차), 압입 원리 기각 | – |
+| A34 | 표면 검출 임계 | 3 N, 20 ms | 로드셀 노이즈 대비 여유(설계 선택) | M | V1a 30회 | 상태기계 | – |
+| A35 | portion 허용범위 | −5 % / +10 % | 최저중량 관리 관행 반영, 매장 기준 없음 | L | 매장 기준으로 교체 | cup_dispensing_station | – |
+| A36 | 맛별 보정 EMA λ | 0.2 | 설계 선택 | L | V1b 로그로 조정 | cup_dispensing_station, firmware | – |
+| A37 | 힘 한계 | F_TARGET 0.55 × 200 = 110 N, F_STOP 0.8 × 200 = 160 N(50 ms), 이송 충돌 30 N | A23 비례, 설계 선택 | **H**(안전·성능) | E0 → C-Gate 0 | firmware/state_machine | – |
+| A38 | 작업자 컵 놓기·가져가기 | 3 s/스쿱 | 근거 없음 | M | V1b 영상 | cycle_time_estimate | – |
+| A39 | 클램셸 비교 조건 | 턱 R 44 mm, 발자국 여유 0 / 6 mm, 초기 표면 −20 mm, 5 mm 격자, portion당 최대 3패스 | 비교용 설정 | L(결론 민감도 확인함: 5·8패스도 같음) | – | scoop_mechanism_compare | – |
