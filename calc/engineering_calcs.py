@@ -185,7 +185,7 @@ for name, do, di in stems:
         delta = Fr * 300.0 ** 3 / (3 * E_STEEL * I)
         rows.append([name, f"{F:.0f}", f"{Fr:.0f}", f"{sigma:.0f}", f"{SY_304/sigma:.1f}", f"{delta:.2f}"])
 table(["Stem", "F [N]", "F_r [N]", "σ_b [MPa]", "SF_yield", "δ_tip [mm]"], rows)
-p(f"피로: 하루 ~10³ 회 × 5년이면 ~2×10⁶ 사이클. 노치계수 Kf≈2를 고려해 공칭응력 ≤ {DESIGN_STRESS_FATIGUE:.0f} MPa 목표 → **Ø25×2 이상**.")
+p(f"피로: 하루 ~10³ 회 × 5년이면 ~2×10⁶ 사이클. 노치계수 Kf≈2를 고려해 공칭응력 ≤ {DESIGN_STRESS_FATIGUE:.0f} MPa 목표 → 운용 F ≤ 100 N이면 **Ø25×2**, F = 150 N이면 **Ø25×3**(σ ≈ 49 MPa) 필요.")
 p("δ_tip < 0.5 mm 목표(깊이 20 mm 대비 2.5%) → Ø25×2에서 만족. push-rod는 튜브 내부로 넣어 식품영역 노출을 줄인다.")
 p()
 
@@ -244,6 +244,40 @@ for F in F_CASES_N:
 table(["F [N]", "T_motor [N·m]", "I [A]", "F_est error if η off by 15 % [N]"], rows)
 p("I_0(무부하 전류)와 η는 **온도(냉동고 근처 그리스 점도)와 마모에 따라 변한다** → 매 기동 시 공회전 구간에서 I_0를 재측정(auto-tare)하고,")
 p("proxy 오차는 P1-2(모터 dyno 교정)에서 실측한다. proxy는 제어용 추정치이며 안전 기능(힘 상한)은 하드웨어 전류제한으로 따로 구현한다.")
+p()
+
+# ------------------------------------------------------------ 11. docking ------
+p("## 11. 헤드 도킹(캐비닛 상판) 반력 — 제품 구조(docs/12)")
+p()
+p("반력 경로: 스쿱 → 스템 → z 잠금 → 헤드 프레임 → 웰 둘레 도킹 플레이트(핀 2 + 래치). 스쿱은 프레임 아래 L_s에 있다.")
+p()
+rows = []
+m_head = 3.0  # kg, ASSUMPTION A21
+for F in (150.0, 200.0):
+    for Ls in (150.0, 300.0):   # scoop depth below frame: full tub vs near-empty tub
+        M_tip = F * Ls / 1e3                      # N·m about the front pin line
+        M_weight = m_head * 9.81 * 0.15           # frame weight, 150 mm lever
+        for s_pin in (250.0,):
+            uplift = max(0.0, (M_tip - M_weight) / (s_pin / 1e3))
+            shear = F / 2
+            rows.append([f"{F:.0f}", f"{Ls:.0f}", f"{M_tip:.1f}", f"{M_weight:.1f}", f"{uplift:.0f}", f"{2*uplift:.0f}", f"{shear:.0f}"])
+table(["F [N]", "스쿱 깊이 L_s [mm]", "전복 모멘트 [N·m]", "자중 복원 [N·m]", "래치 인장 [N]", "래치 설계하중 SF2 [N]", "핀당 전단 [N]"], rows)
+p("→ 헤드 자중(3 kg 가정)만으로는 전복을 막지 못한다(복원 4.4 N·m ≪ 전복 22–60 N·m). **웰마다 고정 도킹 플레이트 + 래치(설계하중 ≥ 0.5 kN)** 가 필요하다.")
+p("대안은 위치이동 암 자체를 강성 있게 만들고 브레이크로 잠그는 것인데, 이 경우 암·브레이크 비용이 커진다 → 도킹 플레이트 방식을 기준안으로 한다(캐비닛 상판 호환성은 P0-4에서 확인).")
+p()
+
+# ------------------------------------------------------------ 12. z lock -------
+p("## 12. z 잠금·counterbalance")
+p()
+rows = []
+for F in (100.0, 150.0, 200.0):
+    Fz = sm.K_VERTICAL * F
+    m_stem = 1.2   # kg, stem + scoop + push-rod + carriage share (ASSUMPTION)
+    hold = (Fz + m_stem * 9.81) * 1.5
+    n_clamp = hold / 0.3       # friction clamp, mu = 0.3 (ASSUMPTION)
+    rows.append([f"{F:.0f}", f"{Fz:.0f}", f"{hold:.0f}", f"{n_clamp:.0f}"])
+table(["F [N]", "F_z = k_v·F [N]", "잠금 유지력 SF1.5 [N]", "마찰 클램프 수직력 (μ=0.3) [N]"], rows)
+p("→ 캠 레버 레일 클램프(수직력 ~1 kN급) 또는 스프링 작동-전자 해제식 브레이크로 충분. counterbalance는 가동질량 ~1.2 kg → 정하중 스프링 ~12 N(약간 모자라게 설정해 스쿱이 표면에 스스로 내려앉게 함).")
 p()
 
 with open(OUT, "w", encoding="utf-8") as f:
