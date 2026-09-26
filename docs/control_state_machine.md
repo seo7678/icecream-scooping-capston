@@ -10,7 +10,7 @@
 | G_SAFE_Z | **XY 이동 명령은 Z_M ≥ Z_SAFE일 때만 발행.** 예외: 현재 통의 safe workspace 안 드래그, 컵 베이 안 배출 이동 | 명령 거부 → POSITION_ERROR |
 | G_INTERLOCK | 도어 닫힘, E-stop 해제, 드라이버 enable | E_STOP / INTERLOCK_OPEN |
 | G_HOMED | 원점복귀 완료, 폐루프 위치오차 < 허용치 | POSITION_ERROR → 재원점 |
-| G_BAY | Z < Z_SAFE로 컵 베이에 들어가기 전 광전 센서 "비어 있음" | 대기(최대 10 s) → NO_CUP/HAND 경고 |
+| G_BAY | 베이 2빔은 **하드웨어로 전 축 STO**(`collision_and_safety.md` §2). 펌웨어는 추가로 Z < Z_SAFE로 베이에 들어가기 전 "비어 있음"을 확인 | 대기(최대 10 s) → HAND 경고. 차단 시 STO → 빔 해제 + 계속 버튼 |
 | G_FORCE | 이송 중 X·Z 로드셀이 예상 밖 힘(> 30 N) | 즉시 정지 → OVERLOAD(충돌 의심) |
 
 ## 2. 상태도 (Diagram 8)
@@ -61,7 +61,7 @@ stateDiagram-v2
 | IDLE | 원점 OK | 대기, 온도·상태 표시 | 맛 선택 | 인터록 열림 |
 | FLAVOR_SELECT | 버튼/터치 | 맛 입력, 크기(싱글/더블/파인트…) 입력 | 입력 확정 | – |
 | LOOKUP_COORDINATE | 맛 확정 | 조회표 → 통 중심, 레인(표면이 가장 높은 레인), Z_est, 스쿱 파라미터 | 계산 완료 | status = EMPTY/DISABLED → 안내 후 IDLE |
-| CHECK_CUP | 좌표 확정 | 저울 > 컵 무게 임계(예: 3 g) & 안정 | 컵 있음 | 10 s 초과 → NO_CUP |
+| CHECK_CUP | 좌표 확정 | 저울 > 컵 무게 임계(예: 3 g) & 안정, 베이 빔 0.5 s 비어 있음 | 컵 있음 + 손 빠짐 | 10 s 초과 → NO_CUP |
 | XY_MOVE_TO_TUB | 컵 확인, **Z ≥ Z_SAFE** | X·Y 동시 이동(250 mm/s) → 레인 시작점, θ = −30° | 도착, 위치오차 < 0.2 mm | 이동 중 예상 밖 힘 → OVERLOAD, 위치오차 → POSITION_ERROR |
 | Z_APPROACH | XY 도착 | Z 빠른 하강 → Z_est + 10 mm | 목표 높이 | 하강 중 힘 발생(예상보다 높은 표면) → 즉시 SURFACE_DETECT로 |
 | SURFACE_DETECT | 목표 높이 | 10 mm/s 등속, 로드셀 tare, ΔF ≥ 3 N 20 ms | 접촉 → Z0 기록 | Z_est − 25 mm까지 무접촉 → NO_TUB |
@@ -70,7 +70,7 @@ stateDiagram-v2
 | SCOOP_CLOSE | 드래그 종료 | X 정지, θ −30° → +90°(0.8 s) | θ 도달 | θ 전류 한계 지속 → STALL |
 | Z_LIFT | 닫기 완료 | Z 상승(150 mm/s) | **Z ≥ Z_SAFE** | 상승 중 과부하(걸림) → STALL |
 | XY_MOVE_TO_CUP | Z ≥ Z_SAFE | X·Y 동시 이동 → 컵 위 | 도착 | – |
-| Z_DISPENSE | 컵 위 + **베이 광전 센서 비어 있음** | Z 하강(50 mm/s) → Z_C + R + 15 | 도착 | 하강 중 베이 센서 차단 → 즉시 정지·상승(HAND) |
+| Z_DISPENSE | 컵 위 + **베이 광전 센서 비어 있음** | Z 하강(50 mm/s) → Z_C + R + 15 | 도착 | 베이 빔 차단 → 하드웨어 STO(전 축) → 빔 해제 + 계속 버튼 → Z 상승 후 재개 |
 | EJECT | 배출 높이 | θ → −30°, 흔들기, X 후퇴로 빗 걸기(방식은 V1 시험으로 확정) | 완료 | 저울 증가 없음 → EJECT_FAIL 경고 |
 | Z_RETRACT | 배출 완료 | Z ≥ Z_SAFE | 도달 | – |
 | PORTION_CHECK | 헤드가 베이를 떠남 | 저울 안정(1 s) → 질량 기록, 판정, 맛별 k 갱신, 절삭 이력 지도 갱신 | 기록 완료 | 범위 밖 → 경고·로그(V1은 자동 top-up 안 함) |

@@ -9,7 +9,7 @@
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ 하드웨어 안전 체인 (펌웨어와 무관하게 동작)                    │
-│ E-stop ─┬─ 도어 인터록 ─┬─ 컵 베이 빔(Z 하강 금지 입력) ─▶ 드라이버 ENABLE / STO │
+│ E-stop ─┬─ 도어 인터록 ─┬─ 컵 베이 2빔(전 축) ─▶ 안전 릴레이 ─▶ 드라이버 STO │
 │         └─ Z 스프링 브레이크(무전원 = 잠김)                    │
 ├──────────────────────────────────────────────────────────────┤
 │ 1 kHz 실시간 루프   : 궤적 보간, 스텝 발생, 로드셀 필터, 전역 가드 │
@@ -61,8 +61,8 @@ void global_guards(void) {
     if (in_travel_move() && (fabs(Fx) > F_TRAVEL || fabs(Fz) > F_TRAVEL)) {
         stop_all(); enter(OVERLOAD); return;                 // 이송 중 충돌 의심
     }
-    if (bay_beam_blocked() && head_in_bay() && Z < Z_SAFE) {
-        stop_all(); z_move_up_to(Z_SAFE); enter(HAND_IN_BAY); return;
+    if (bay_beam_blocked()) {                                // 하드웨어가 이미 전 축 STO
+        enter(HAND_IN_BAY); return;                          // 빔 해제 + 계속 버튼 → Z 상승 후 재개
     }
 }
 ```
@@ -103,7 +103,7 @@ MoveResult request_xy_move(float x, float y, MoveKind kind) {
 | 8 | LOOKUP | 조회 OK | status ∈ {OK, LOW}, map_valid | 레인·Z_est·파라미터 계산 | CHECK_CUP |
 | 9 | LOOKUP | status ∈ {EMPTY, DISABLED} | – | "통 교체/점검" 안내 | IDLE |
 | 10 | LOOKUP | map_valid = false | – | 3점 재프로브 예약 | REPROBE |
-| 11 | CHECK_CUP | 저울 > CUP_PRESENT_G, 안정 | – | 저울 tare(컵 포함) | XY_TO_TUB |
+| 11 | CHECK_CUP | 저울 > CUP_PRESENT_G, 안정 | **베이 빔 0.5 s 연속 비어 있음** | 저울 tare(컵 포함) | XY_TO_TUB |
 | 12 | CHECK_CUP | T_CUP_WAIT 초과 | – | "컵을 놓으세요" | NO_CUP |
 | 13 | XY_TO_TUB | 진입 | **Z ≥ Z_SAFE** (아니면 Z 먼저 상승) | θ → THETA_ATTACK, `request_xy_move(lane_start, TRAVEL)` | – |
 | 14 | XY_TO_TUB | 도착, 편차 < POS_ERR_MAX | – | – | Z_APPROACH |
@@ -191,7 +191,7 @@ t_ms, state, event, X, Y, Z, theta, Fx, Fz, I_theta, vol_mm3, scale_g, flavor, l
 | 시험 | 방법 | 통과 기준 |
 |---|---|---|
 | Z_SAFE 게이트 | Z = Z_SAFE − 1 mm에서 XY 이송 명령 주입 | 100 % 거부, 로그 기록 |
-| 베이 빔 | Z_DISPENSE 중 빔 차단 | ≤ 50 ms 정지 후 상승 |
+| 베이 빔 | 이송·Z_DISPENSE 중 빔 차단 | 전 축 STO ≤ 50 ms, 버튼 없이는 재개 안 됨 |
 | 이송 충돌 | 이송 경로에 스펀지 블록 | F_TRAVEL에서 정지, 블록 변형 ≤ 5 mm |
 | 과부하 | 냉동 왁스 블록(F > F_STOP) | T_STOP 안에 정지 + Z 상승 |
 | 정전 | 드래그 중 전원 차단 | Z 브레이크 잠김, 헤드가 천천히 위로(counterbalance) |
