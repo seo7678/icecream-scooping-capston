@@ -1,0 +1,1 @@
+date,participant_id,hand(L/R),MVC_grip_N,condition(scoop_std/scoop_best),target_T_C,core_T_C,surface_T_C,trial,cycle_time_s,grip_peak_N,grip_mean_N,grip_peak_pctMVC,wrist_flex_ext_range_deg,wrist_dev_range_deg,forearm_rot_range_deg,loaded_wrist_rotations,mass_g,topups,borg_CR10,video_file,notes

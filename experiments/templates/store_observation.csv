@@ -1,0 +1,1 @@
+date,store_id(anonymised),period(peak/offpeak),start_time,end_time,worker_id(anonymised),order_type(single/double/pint/quart/family/halfgallon),scoops_in_order,topups,rinses,cycle_time_s,cabinet_display_T_C,surface_IR_T_C,scoop_model,notes

@@ -1,0 +1,1 @@
+date,run_id,experiment(E1-E9),mode(M1/M1-cam/M1-arc/M2/M3),strategy(S0/S1/S2),trajectory(T1-T4),product,target_T_C,core_T_C,surface_T_C,h_mm,d_max_mm,v_nom_mm_s,F_peak_N,F_mean_N,F_integral_Ns,tau_close_Nm,I_x_peak_A,I_th_peak_A,energy_J,stroke_mm,V_integrated_cm3,mass_g,success(0/1),ball_quality_1to5,events,raw_file,notes

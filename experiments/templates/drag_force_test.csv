@@ -1,0 +1,1 @@
+date,run_id,operator,product,lot,target_T_C,core_T_C,surface_T_C_before,surface_T_C_after,time_out_of_freezer_s,depth_mm,speed_mm_s,scoop_model,scoop_R_mm,F_peak_N,F_mean_N,stroke_mm,chip_mass_g,failure_mode(curl/crack/jam),notes
