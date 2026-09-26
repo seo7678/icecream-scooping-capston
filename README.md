@@ -4,11 +4,17 @@
 
 > **한 문서로 보기(문제 → 기존 해결책·특허와 한계 → 아이디어 → 구조와 메커니즘):** [`docs/concept_brief.md`](docs/concept_brief.md)
 >
+> **구조도 · 메커니즘 설명 · 작동 동영상:** [`docs/mechanism_explained.md`](docs/mechanism_explained.md) (그림·영상 원본은 `media/`)
+>
 > **현재 기준안 요약:** [`docs/final_system_concept.md`](docs/final_system_concept.md) — 권장 구조, 다시 판단한 결정과 근거, 위험 Top 5, 첫 시제품(V1a), 결정 게이트, 15개 항목 요약
 >
 > 구조: [`system_architecture_cartesian.md`](docs/system_architecture_cartesian.md) · 비교: [`architecture_comparison.md`](docs/architecture_comparison.md) · 선행기술 재검색: [`updated_prior_art.md`](docs/updated_prior_art.md)
 
 ## 현재 기준안 (2026-09)
+
+![작동 동영상](media/operation.gif)
+
+![전체 구조](media/fig1_overall_axonometric.png)
 
 작업자가 맛을 고르면 **직교 3축(X_M, Y_M, Z_M)** 이 헤드를 그 통으로 옮기고, 헤드는 **스쿱 피치 θ 하나**만 따로 움직인다. 이 기계를 "5축 로봇"이라 부르지 않는다. 구성은 전역 위치결정 3축과 로컬 스쿠핑 1축, **모터 4개**다.
 
@@ -80,6 +86,7 @@
 | `BOM/` | `cartesian_prototype_v1.csv` — Cartesian V1 44개 항목, 추정가 / `prototype_v1.csv` — Legacy V1 rig |
 | `experiments/` | 프로토콜(P0-2, P0-3), 기록 템플릿 |
 | `cad/` | `cartesian_layout.md`, `scooping_head_layout.md` — 배치·높이·치수 |
+| `media/` | 구조도(축측·3면도), 메커니즘 그림, 작동 동영상(MP4·GIF)과 생성 스크립트 |
 | `firmware/` | `state_machine.md`(전이표·가드·Z_SAFE 게이트), `coordinate_map_example.md`(맛 좌표 JSON·레인 선택) |
 | `prompts/`, `references/` | 이전 작업 프롬프트, 참고문헌 색인 |
 

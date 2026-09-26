@@ -68,6 +68,8 @@
 
 ## 3. 다이어그램 목록 (요구된 9개)
 
+렌더링한 그림과 작동 동영상은 [`mechanism_explained.md`](mechanism_explained.md)에 모았다(전체 구조 축측도·3면도, 헤드 메커니즘, 스쿱 동작, 반력 경로, 1회 사이클 영상).
+
 | # | 다이어그램 | 위치 |
 |---|---|---|
 | 1 | XY 갠트리 평면도 | `system_architecture_cartesian.md` §3 |

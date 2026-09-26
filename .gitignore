@@ -17,6 +17,7 @@ Thumbs.db
 # Experiment raw media / large exports
 experiments/raw/
 *.mp4
+!media/*.mp4
 *.mov
 *.zip
 

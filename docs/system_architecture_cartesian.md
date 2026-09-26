@@ -141,3 +141,4 @@ FLAVOR SELECT → LOOKUP (통 좌표 + 레인 + 표면 추정) → CHECK CUP (�
 | 스쿠핑 원리 비교(끌기 vs 클램셸 등) | scooping_head_mechanism.md §3, calc/output/scoop_mechanism_compare.md |
 | 선행기술 재검색 | updated_prior_art.md |
 | **최종 요약·권장안·게이트** | **final_system_concept.md** |
+| 구조도·메커니즘 그림·작동 동영상 | mechanism_explained.md, media/ |
