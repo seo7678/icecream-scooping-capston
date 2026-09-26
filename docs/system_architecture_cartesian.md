@@ -1,6 +1,6 @@
 # System Architecture — Cartesian Automatic Flavor-Selection Scooper
 
-> 이 문서는 새 기준 아키텍처다. 권장안 요약과 결정 게이트는 `final_system_concept.md`. 작업자가 헤드를 직접 옮기던 이전 구조는 **Legacy Architecture M(수동 위치지정)** 으로 남기고(docs/11, 12, concept_brief), 비교는 `architecture_comparison.md`에 있다.
+> 이 문서는 새 기준 아키텍처다. 권장안 요약과 결정 게이트는 `final_system_concept.md`. 작업자가 헤드를 직접 옮기던 이전 구조는 **Legacy Architecture M(수동 위치지정)** 으로 남기고(docs/11, 12, concept_brief 이전 판 `32daeaa`), 비교는 `architecture_comparison.md`에 있다.
 > 숫자는 `calc/`의 **가정 하중·가정 치수** 결과다. 실측 전에는 결과가 아니라 설계 입력으로만 읽는다.
 
 ## 1. 한 줄 정의

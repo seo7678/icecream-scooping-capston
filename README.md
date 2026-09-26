@@ -2,6 +2,8 @@
 
 **하드아이스크림 스쿠핑의 자동화: Cartesian 자동 맛 선택 스쿠퍼 (현재 기준안)**
 
+> **한 문서로 보기(문제 → 기존 해결책·특허와 한계 → 아이디어 → 구조와 메커니즘):** [`docs/concept_brief.md`](docs/concept_brief.md)
+>
 > **현재 기준안 요약:** [`docs/final_system_concept.md`](docs/final_system_concept.md) — 권장 구조, 다시 판단한 결정과 근거, 위험 Top 5, 첫 시제품(V1a), 결정 게이트, 15개 항목 요약
 >
 > 구조: [`system_architecture_cartesian.md`](docs/system_architecture_cartesian.md) · 비교: [`architecture_comparison.md`](docs/architecture_comparison.md) · 선행기술 재검색: [`updated_prior_art.md`](docs/updated_prior_art.md)
@@ -36,7 +38,7 @@
 ## Legacy Architecture M — 반력 접지 헤드 + 사람 위치지정 (이전 기준안)
 
 > 아래는 이전 기준안이다. 헤드 기구·식품 모듈·부하 적응 제어·실험계획은 새 구조에서도 그대로 쓰인다. 무엇이 유효하고 무엇이 바뀌었는지는 각 문서 첫머리의 배너에 있다.
-> 한 문서로 보기: [`docs/concept_brief.md`](docs/concept_brief.md) · 요약: [`docs/00_executive_summary.md`](docs/00_executive_summary.md) · 제안서: [`docs/23_final_capstone_proposal.md`](docs/23_final_capstone_proposal.md)
+> 요약: [`docs/00_executive_summary.md`](docs/00_executive_summary.md) · 제안서: [`docs/23_final_capstone_proposal.md`](docs/23_final_capstone_proposal.md) · 한 문서 요약의 이전 판: `docs/concept_brief.md` 커밋 `32daeaa`
 
 ### 연구질문 (Legacy)
 

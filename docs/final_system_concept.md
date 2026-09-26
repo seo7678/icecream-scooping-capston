@@ -174,5 +174,5 @@
 | 11 | 가장 큰 기계 위험 | 실측되지 않은 절삭력이 ~0.8 m 레버로 구조·Z·θ에 걸림 → E0 먼저 |
 | 12 | 가장 큰 선행기술 위험 | Dexai US11597084B2(상태별 토크 한계, 등록) FTO. 신규성 측면에서는 Columbia 스쿠핑 로봇 + 갠트리 계량 식품 장치(US11969878) 조합의 자명성 |
 | 13 | 첫 시제품 | E0 확장(기계 없이) → **V1a 한 통짜리 X-Z-θ 장치**(~443만 원) → V1b 자동 사이클 |
-| 14 | 수정·생성 파일 | 신규: docs 14(이 문서 포함), calc 스크립트 7 + 출력, firmware 2, cad 2, BOM 1, research/components.md. 수정: Legacy 문서 배너(00, 04, 11–14, 16, 17, 20, 23, 24, concept_brief), research/patents.md §5, P0-3 프로토콜 §7, README, calc/README, firmware/README |
+| 14 | 수정·생성 파일 | 신규: docs 14(이 문서 포함), calc 스크립트 7 + 출력, firmware 2, cad 2, BOM 1, research/components.md. 수정: concept_brief 전면 개정(Cartesian 기준), Legacy 문서 배너(00, 04, 11–14, 16, 17, 20, 23, 24), research/patents.md §5, P0-3 프로토콜 §7, README, calc/README, firmware/README |
 | 15 | 커밋 | design: replace manual positioning with Cartesian gantry / analysis: size gantry and Z axis / design: define XYZ and local scoop architecture / analysis: re-select scooping principle / control: add flavor coordinate and state machine / safety: add collision and hygiene architecture / research: recheck robotic prior art / docs: publish updated final concept |
