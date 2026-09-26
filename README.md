@@ -2,6 +2,8 @@
 
 **하드아이스크림 스쿠핑 작업부하의 정량화와 반력접지형 2자유도 동력 스쿠핑 모듈의 설계·검증**
 
+> 한 문서로 보기(문제 → 한계 → 아이디어 → 메커니즘): [`docs/concept_brief.md`](docs/concept_brief.md)
+>
 > 요약: [`docs/00_executive_summary.md`](docs/00_executive_summary.md) · 교수 제출용: [`docs/23_final_capstone_proposal.md`](docs/23_final_capstone_proposal.md) · 이번 주 할 일: [`docs/24_next_actions.md`](docs/24_next_actions.md)
 
 ## 연구질문
