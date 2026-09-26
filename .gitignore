@@ -1,0 +1,21 @@
+# CAD temporary/export files
+*.bak
+*.tmp
+*.autosave
+
+# Python/data
+__pycache__/
+*.pyc
+.venv/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Experiment raw media / large exports
+experiments/raw/
+*.mp4
+*.mov
+*.zip
