@@ -1,0 +1,45 @@
+ID,Subsystem,Part,Specification,Qty,Purpose,Estimated price (KRW total),Purchase source category,Food zone,Notes
+C01,Frame,Steel box beam (X beam),Structural steel RHS 100x50x4; 1.6 m; rail seats milled flat,1,Fixed X beam carrying X rails and screw,120000,Steel supplier + machine shop,No,Steel beam chosen for torsion (calc/output/scoop_load_path.md)
+C02,Frame,Aluminium profile frame,8080/4080 profiles ~8 m + brackets + feet,1 set,Posts and base straddling the chest freezer,250000,Profile supplier,No,Posts bolted to a common base with the freezer deck
+C03,Z axis,Z column,Steel square tube 60x60x4; 0.6 m; rail faces machined,1,Moving Z quill,80000,Steel supplier,No,Stiffest element per kg in the chain
+C04,Frame,Machining / welding outsourcing,X carriage plate; Y cross-slide plate; column end plates; head bracket,1 lot,Custom structural parts,400000,Local machine shop,No,
+C05,X axis,Ball screw X,SFU2010 1200 mm + BK15/BF15 supports + nut housing,1,Travel AND drag axis (Arch 1),200000,Linear motion supplier,No,Critical speed ~1900 rpm at 1150 mm (THK formula)
+C06,X axis,Profile rails X,HGR15 1300 mm x2 + HGH15CA blocks x4,1 set,X guide,260000,Linear motion supplier,No,C0 16.97 kN per block [SNIPPET]
+C07,X axis,Closed-loop stepper X,NEMA23 ~3 N·m closed-loop + driver,1,X drive,180000,Motion control supplier,No,48 V supply
+C08,X axis,X nut load cell,S-beam 50 kg + axial mount between ball nut and carriage,1,F_x drag force (control + research),50000,Load cell supplier,No,Out of the moment path
+C09,X axis,Coupling + motor mount,Jaw coupling 8/12 mm + NEMA23 mount,1,,30000,Linear motion supplier,No,
+C10,Y axis,Ball screw Y (cross-slide),SFU1605 250 mm + supports,1,Lane shift +-80 mm,90000,Linear motion supplier,No,Product: moving bridge + HTD belt instead
+C11,Y axis,Profile rails Y,HGR15 250 mm x2 + 4 blocks,1 set,Cross-slide guide (sees drag force sideways),140000,Linear motion supplier,No,Block spacing >= 120 mm
+C12,Y axis,Closed-loop stepper Y,NEMA17 closed-loop + driver,1,Y drive,110000,Motion control supplier,No,
+C13,Z axis,Ball screw Z,SFU1610 500 mm + supports,1,Z drive,100000,Linear motion supplier,No,Backdrivable -> brake required
+C14,Z axis,Profile rails Z,HGR15 600 mm x2 + 4 blocks,1 set,Z guide on column,170000,Linear motion supplier,No,Block spacing 150 mm
+C15,Z axis,Closed-loop stepper Z with brake,NEMA17 closed-loop + 24 V spring-applied brake (>= 0.25 N·m),1,Z drive + power-off hold,160000,Motion control supplier,No,Brake torque 0.25 N·m class [SNIPPET]
+C16,Z axis,Counterbalance,Gas spring or constant-force spring ~75 N (= Z weight x1.05) + mounts,1,Fail-safe up + small Z motor,50000,Hardware supplier,No,Tune after weighing the Z assembly
+C17,Z axis,Z nut load cell,S-beam 20 kg + ball-joint decoupler,1,Surface detection (3 N threshold) + F_z,50000,Load cell supplier,No,Key sensor (calc/output/z_axis_sizing.md)
+C18,Hygiene,Bellows / covers,Bellows for Z column and X/Y screws; X-beam drip tray (304),1 set,Keep lubricant and wear debris out of tubs,120000,Machine accessories,Splash,NSF H1 grease on all axes
+C19,Theta axis,Planetary DC gearmotor,24 V; rated >= 8 N·m at >= 30 rpm; encoder,1,Scoop pitch (attack / close / eject),150000,Motor supplier,No,Gear self-holding
+C20,Theta axis,DC motor driver with current sense,H-bridge >= 10 A + current sense output,1,Theta drive + secondary F_x estimate,40000,Electronics,No,
+C21,Head,Head housing + drip umbrella,Non-food housing (FDM allowed) + 304 umbrella plate above stem,1,Protect food zone from head,60000,Workshop,Splash (umbrella),FDM only above the umbrella
+C22,Food module,Scoops (store model),304 stainless ice cream scoop,3,2 modules + spare,60000,Restaurant supply,Yes,Buy the store's model (P0-4)
+C23,Food module,Stems,304 tube OD30 x 3; 1 m (two stems) + welded end caps,2,Stem (sealed both ends),60000,Metal supplier,Yes,30x3 meets 1 mm target (calc)
+C24,Food module,Push-rods + pins + quick-release,304 dia 8 push-rod; dia 8 pivot pins; ball-lock pins x4,2 sets,Pitch parallelogram + tool-less removal,90000,Machine parts,Yes,Push-rod exposed (legacy FMEA #12)
+C25,Food module,Welding + polishing,TIG on 304; ground smooth; Ra target 0.8 um,1 lot,Food-contact finish,150000,Local shop,Yes,General + allergen module
+C26,Cup station,Cup scale + recessed well,1 kg load cell + NAU7802/HX711 + 304 recessed well + locator ring,1,Cup detect + portion verification,60000,Load cell + sheet metal,Splash,Cup rim flush with deck -> Z_SAFE 60 mm
+C27,Cup station,Cup-bay through-beam sensor,Photoelectric through-beam (or 2-beam light grid),1,Hand presence -> block entry,40000,Sensor supplier,No,Hardwired to motion enable for the bay
+C28,Rinse station,Rinse container,304 container + drain; running-water or >= 57 degC option,1,Scoop rinse on flavour change,60000,Restaurant supply,Yes,V1: manual refill
+C29,Cup station,Eject comb (hook-strip),304 fixed comb at cup station; catches the protruding ball while X retracts,1,Ejection (first test candidate),20000,Workshop,Yes,Over-rotation impossible (linkage +-60 deg); avoid scoop-internal wiper (US20240245265A1)
+C30,Cold chain,Chest freezer,250-300 L; interior >= 850 x 450 mm,1,Holds 3 tubs at dipping temperature,450000,Appliance store,No,Borrow if possible
+C31,Cold chain,Temperature controller,External-probe digital controller,1,Hold -14 degC,40000,Electronics,No,
+C32,Cold chain,Deck plate,304 sheet with 3 tub openings + insulation + tub wells / risers,1,Tub location + lateral restraint + cold retention,150000,Sheet metal shop,Splash,Tubs held against 200 N side load
+C33,Sensors,Temperature sensors,Thermocouples + MAX31856 x2 + IR thermometer,1 set,Tub temperature logging,100000,Electronics,Probe tip,
+C34,Control,Controllers,Teensy 4.1 (motion + FSM) + ESP32 (HMI/log),1 set,Motion control + state machine,70000,Electronics,No,Custom trajectory for X-Z-theta interpolation
+C35,Control,Precision ADC,ADS1256 8-ch,1,X/Z nut load cells >= 500 Hz,30000,Electronics,No,
+C36,HMI,Flavour selector,Touchscreen 5-7 in or 3 flavour buttons + start/stop,1,Flavour selection,60000,Electronics,No,No vision / AI
+C37,Safety,E-stop + safety relay,ISO 13850-style E-stop + safety relay + contactor (STO path),1 set,Stop category 0,80000,Electrical supplier,No,
+C38,Safety,Interlocks + limits,Door interlock switches x2 + home/limit switches x6,1 set,Guard + homing + hard limits,60000,Electrical supplier,No,
+C39,Safety,Enclosure,Polycarbonate panels + frame + interlocked hinged door (tub access),1,Separation from moving axes,250000,Plastics / profile supplier,No,Cup bay is the only open access
+C40,Power,Power supplies + wiring,48 V 10 A + 24 V 10 A + fuses + cable chains + wiring,1 set,,200000,Electrical supplier,No,
+C41,Misc,Misc hardware,Fasteners; NSF H1 grease; non-food 3D prints; tape,1 lot,,120000,Various,No,
+C42,Test,Ice cream tubs,Commercial 4 L foodservice tubs (2 products incl. one hard flavour),16,All experiments,240000,Foodservice wholesaler,Yes,Test product is discarded
+C43,Test,Cups + reference scale,Cups + 0.1 g reference scale,1 lot,Scale calibration,40000,Kitchen supply,No,
+C44,Optional research,Tub force platform,4 single-point + 2 S-beam load cells (legacy SA6),1,Ground-truth force on the ice cream (research only),170000,Load cell supplier,No,Optional; reuse from legacy BOM if built

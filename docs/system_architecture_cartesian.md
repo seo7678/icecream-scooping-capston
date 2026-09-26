@@ -78,7 +78,7 @@
 FLAVOR SELECT → LOOKUP (통 좌표 + 레인 + 표면 추정) → CHECK CUP (저울)
 → XY MOVE TO LANE START (Z ≥ Z_SAFE) → Z FAST → Z PROBE (로드셀 3 N) → Z0
 → DIVE (X·Z 보간, θ = −30°) → DRAG (X 진행, Z로 깊이 적응, 부피 적분) → CLOSE (θ −30° → +90°)
-→ Z LIFT (≥ Z_SAFE) → XY MOVE TO CUP → Z DISPENSE → EJECT (θ 과회전 + 스트리퍼)
+→ Z LIFT (≥ Z_SAFE) → XY MOVE TO CUP → Z DISPENSE → EJECT (θ −30° + 고정 빗 걸기 + X 후퇴)
 → PORTION CHECK (저울) → Z RETRACT → 다음 주문 또는 HOME
 ```
 
@@ -106,7 +106,7 @@ FLAVOR SELECT → LOOKUP (통 좌표 + 레인 + 표면 추정) → CHECK CUP (�
 | X_M | 1,150 mm | SFU2010 볼스크류 | HGR15 × 2 (빔 전면) | NEMA23 폐루프 ~2–3 N·m | 불필요(수평) | 통 간 이동 **+ 드래그**, X 볼너트 로드셀 = F_x |
 | Y_M | ±80 mm (크로스슬라이드) | SFU1605 | HGR15 × 2 | NEMA17 폐루프 | 불필요 | 레인 이동 |
 | Z_M | 400 mm | SFU1610 | HGR15 × 2 (기둥 측면) | NEMA17 폐루프 | **스프링 브레이크 + counterbalance(자중 × 1.05)** | 접근·깊이·들어올림·배출 높이, Z 볼너트 로드셀 = 표면 검출·F_z |
-| θ_s | −30° ~ +200° | 유성 기어드모터 + 평행링크 push-rod | 피벗 핀 | 24 V DC ≥ 8 N·m, 엔코더, 전류센스 | 기어 자기유지 | 공격각·닫기·배출 |
+| θ_s | −30° ~ +90° (평행링크 유효 ±60°) | 유성 기어드모터 + 평행링크 push-rod | 피벗 핀 | 24 V DC ≥ 8 N·m, 엔코더, 전류센스 | 기어 자기유지 | 공격각·닫기·배출 자세 |
 
 제품(2열 이상)에서는 Y를 **이동 브리지 + HTD 5M 벨트(3:1, 크로스샤프트 동기)** 로 바꾼다. 드래그가 X 방향이라 Y 구동은 옆힘(가정 60 N)만 받는다.
 
