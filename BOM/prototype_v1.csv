@@ -1,0 +1,38 @@
+ID,Part,Specification,Qty,Purpose,Estimated price (KRW total),Purchase source category,Food zone,Sub-assembly,Notes
+B01,Aluminum profile,4040 series 8 slot; ~6 m total cut to length + corner brackets + T-nuts,1 set,Rig frame over chest freezer,180000,Domestic profile supplier (online),No,SA1,Main beams must be 4040 (calc §8); 2020 only for brackets
+B02,Leveling feet / casters,M10 adjustable feet,4,Frame leveling,20000,Hardware store,No,SA1,
+B03,Ball screw linear module (Z),SFU1605; 300 mm stroke; with linear guides; NEMA23 mount,1,Z axis (touch-off; depth; arc/plunge emulation),130000,Linear motion online supplier,No,SA2,Vertical axis back-drives: use motor brake
+B04,Closed-loop stepper with brake (Z),NEMA23 ~2 N·m holding; encoder; 24 V brake; + driver,1,Z axis drive,200000,Motion control supplier,No,SA2,Add shear-pin/breakaway coupling (stepper+screw can exceed 1 kN)
+B05,Ball screw linear module (X),SFU1610; 300 mm stroke; two 15 mm-class carriage blocks,1,Sweep axis,150000,Linear motion online supplier,No,SA3,Check static moment rating (calc §7)
+B06,DC motor with encoder (X),24 V ~60 W; >=500 CPR encoder; ~3000 rpm,1,Sweep drive (current = force proxy),120000,Motor supplier,No,SA3,Or BLDC + FOC controller as upgrade
+B07,DC gearmotor with encoder (theta),24 V planetary; rated >=8 N·m at >=30 rpm; encoder,1,Pitch/closing drive,150000,Motor supplier,No,SA4,Mount on reaction torque arm (B13)
+B08,Motor drivers with current sense,H-bridge >=10 A; hardware current limit; current-sense output (e.g. VNH5019-class or BTS7960 + INA240),2,X and theta drives,70000,Electronics online,No,SA9,Hardware current limit sets 200 N / 10 N·m caps
+B09,Load cell S-beam (X inline),50 kg; S-type; C3 or better,1,Measure sweep force Fx (ground truth),40000,Load cell supplier,No,SA3,Between carriage and stem mount
+B10,Load cell (Z),50 kg S-type,1,Measure Fz and touch-off,40000,Load cell supplier,No,SA2,
+B11,Single-point load cells (tub platform Fz),20-30 kg single-point,4,Tub force platform vertical force,80000,Load cell supplier,No,SA6,Tare before each test; check low-temp rating
+B12,S-beam load cells (tub platform Fx/Fy),20 kg S-type,2,Tub force platform horizontal forces,60000,Load cell supplier,No,SA6,Horizontal restraints of the platform
+B13,Load cell (theta reaction arm),10-20 kg bar type,1,Measure pitch torque via reaction arm,25000,Load cell supplier,No,SA4,tau = F x arm length
+B14,Precision ADC modules,ADS1256 24-bit 8-ch,2,Load-cell DAQ >=500 Hz,40000,Electronics online,No,SA9,HX711 (10/80 Hz) is too slow for peak force
+B15,Microcontroller boards,ESP32 dev board,2,Controller + DAQ/logging,30000,Electronics online,No,SA9,Spare included
+B16,Current sensors,INA240 or INA219 breakout,3,Motor current logging (proxy validation),30000,Electronics online,No,SA9,
+B17,Thermocouple interface + probes,MAX31856 + type-T probes,3,Tub core/surface temperature,60000,Electronics online,Yes (probe tip),SA10,Probe tip is food-contact: stainless sheath; clean with alcohol
+B18,IR thermometer,-30 to +100 °C; emissivity adjustable,1,Surface temperature check,40000,Tool store,No,SA10,
+B19,Chest freezer (tempering cabinet),100-150 L; with external digital temperature controller (probe); set -14 °C,1,Tub temperature conditioning,350000,Appliance store,No,SA10,Borrow from lab if possible
+B20,Tub holder / insulated sleeve,Insulated sleeve + adapter plate for 4 L tubs,1,Hold tub on force platform,30000,DIY,No,SA6,
+B21,Emergency stop + safety relay,ISO 13850-style red/yellow mushroom; safety relay or contactor,1 set,Stop category 0 (SF1),60000,Electrical supplier,No,SA9,
+B22,Hold-to-run handle switch + interlock switches,Momentary enable switch; guard interlock switch x2,1 set,SF2 / SF4 hardwired to driver enable,40000,Electrical supplier,No,SA9,
+B23,Power supply,24 V 150 W SMPS + fuses + wiring + terminal blocks,1 set,Power,60000,Electrical supplier,No,SA9,
+B24,Limit switches,Mechanical micro switches,6,Hard limits Z/X/theta,15000,Electronics online,No,SA2-4,
+B25,Polycarbonate guard,3-5 mm PC sheet cut + hinges,1,Guard around tub zone,50000,Plastics supplier,No,SA1,Interlocked (B22)
+B26,Scoops (same model as store),304 stainless ice cream scoop,3,Food-contact scoop for rig (x2) + instrumented manual scoop (x1),60000,Restaurant supply,Yes,SA5/SA7,Buy the store's model if identifiable (P0-4)
+B27,Stem tube,304 tube OD25 x 2 wall; 500 mm,1,Scoop stem,30000,Metal supplier,Yes,SA5,Product needs 25x3 (docs/13 §4)
+B28,Push-rod + pins,304 round bar dia 8 (500 mm) + 304 pins dia 8,1 set,Pitch parallelogram,20000,Metal supplier,Yes,SA5,
+B29,Ball-lock quick-release pins,Stainless dia 8,3,Tool-less detachment of food module (H3),45000,Machine parts supplier,Yes,SA5,
+B30,Machining / welding outsourcing,Scoop pivot bracket; top clamp; reaction arm; TIG weld on stainless,1 lot,Custom parts,200000,School shop / local machine shop,Mixed,SA4-5,Keep food-zone welds ground smooth
+B31,Instrumented manual scoop,Strain gauges (3 bridges: 2 bending + torsion) + amp + FSR grip sensors,1 set,Baseline M3 handle moments and grip,100000,Sensor supplier,No (handle),SA7,Calibrate with known weights
+B32,IMUs,BNO055 or equivalent 9-axis,2,Wrist/forearm angles,80000,Electronics online,No,SA7,Hand + forearm segments
+B33,Hand dynamometer,Digital grip dynamometer,1,MVC normalization (%MVC),60000,Medical/fitness supplier,No,SA7,
+B34,Push-pull force gauge + slide (P0-3 drag test),Digital force gauge 500 N + manual linear slide + scoop fixture,1 set,First real force numbers before V1 rig,250000,Measurement instrument supplier,Yes (scoop),P0-3,Most important early purchase
+B35,Digital scale,3 kg / 0.1 g,1,Portion mass,40000,Kitchen/lab supplier,No,Test,
+B36,Ice cream tubs for testing,Commercial 4 L foodservice tubs (at least 2 products incl. one hard flavour),16,All experiments,240000,Foodservice wholesaler,Yes,Test,Test product is discarded (not eaten)
+B37,Misc hardware,Fasteners; cable chain; 3D-printed non-food brackets; tape; gloves; sanitizer,1 lot,,80000,Various,No,All,FDM parts only in non-food zone (H5)
