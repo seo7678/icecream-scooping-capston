@@ -12,6 +12,7 @@
 | `fig6_y_axis_lanes.png` | Y 크로스슬라이드, TUB1 레인, 레인별 한 스쿱 질량 |
 | `fig7_v1s_student_rig.png` | 학생 제작형 V1-S(젤라토 팬·상용 모듈·팬 힘 플랫폼·팬 쪽 Y) |
 | `fig8_alternatives_quantified.png` | 대체안 정량 비교(용기, 피치 구동, 단열 홀더, 강성) |
+| `fig9_v1l_budget_rig.png` | 예산 100만 원 이하 V1-L(이동 베드 + 고정 브리지, 수동 레인, 리드스크류·스테퍼) |
 | `operation_3d.mp4` / `operation_3d.gif` | 3D, X·Y·Z·θ 4축 사이클(옆 레인 y = −40, 높이 지도 절삭), 20 s 실시간 |
 | `operation.mp4` / `operation.gif` | 정면 상세, 가운데 레인 y = 0 사이클, 20 s 실시간 |
 | `machine.py` | 공통 치수·색·2D 그리기 함수(값은 `calc/cartesian_model.py`에서 가져옴) |

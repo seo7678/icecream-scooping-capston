@@ -3,7 +3,8 @@ scoop sequence and reaction load path.
 
 Run:  python3 media/make_figures.py
 Out:  media/fig1_overall_axonometric.png, fig2_three_view.png, fig3_head_mechanism.png,
-      fig4_scoop_sequence.png, fig5_load_path.png
+      fig4_scoop_sequence.png, fig5_load_path.png, fig6_y_axis_lanes.png,
+      fig7_v1s_student_rig.png, fig8_alternatives_quantified.png, fig9_v1l_budget_rig.png
 
 Geometry and loads are the V1 design values (calc/cartesian_model.py,
 docs/*.md). All loads are ASSUMPTIONS; nothing is measured yet.
@@ -993,6 +994,315 @@ def fig_alternatives():
     save(fig, "fig8_alternatives_quantified.png")
 
 
+# =====================================================================================
+# Fig 9 — V1-L budget rig (<= 1,000,000 KRW): moving bed + fixed bridge
+# =====================================================================================
+V1L_FRAME = "plywood"      # base, towers, bed deck: "plywood" (18T, default) or "profile" (2040 aluminium)
+
+
+def fig_v1l(frame=None):
+    FRAME = frame or V1L_FRAME
+    # callouts / legend (title, description) — numbered 1..14 in this order
+    items = [
+        ("베이스 프레임", "2040 1000×560, 조절 발 4"),
+        ("X 이동 베드  [X]", "레일 2줄 + TR8 리드 4 + NEMA17, 행정 ~466 mm. 베드가 움직여 드래그"),
+        ("고정 브리지", "4080 교차빔 2개(간격 220) + 2040 A-프레임 타워"),
+        ("Z 이동 기둥  [Z]", "4080 + TR8 리드 2(자립, 브레이크 없음) + NEMA17"),
+        ("θ 스테퍼 + 1:27 유성기어  [θ]", "이중 push-rod(90° 위상), 전류 제한"),
+        ("식품 모듈 (PoC)", "매장 스쿱 + Ø30 스템 + push-rod 2개"),
+        ("젤라토 팬 360×165×120", "레인 3개(−38/0/+38), 레인 길이 270 mm"),
+        ("단열 홀더 + 인덱스 핀", "XPS 50 mm. 레인은 손으로 핀을 옮겨 바꿈"),
+        ("팬 힘 플랫폼", "바형 로드셀 2개 + 판스프링 플렉서 + HX711(80 SPS): 접촉·F_x·F_z·portion"),
+        ("컵 받침", "베드에 실려 헤드 아래로 옴, 뒤집기 배출"),
+        ("제어 박스", "Uno + CNC 실드(GRBL), Nano + HX711 ×2, 24 V 전원, 노트북(USB)"),
+        ("E-stop", "모터 전원 차단"),
+        ("hold-to-run 발판", "누르고 있을 때만 동작"),
+        ("아크릴 옆판", "완전 인클로저 아님, 작업자 입회 시험"),
+    ]
+    if FRAME == "plywood":
+        items[0] = ("베이스", "18T 합판(방수 도장)")
+        items[2] = ("고정 브리지", "4080 교차빔 2개(간격 220) + 합판 삼각 타워")
+    title = "V1-L — 예산 100만 원 안에서 만드는 시제품"
+    subtitle = ("팬이 움직이고 헤드는 Z·θ만: 이동 베드 + 고정 브리지. 볼스크류 모듈·폐루프 모터·자동 Y·인클로저를 빼고 "
+                "리드스크류·스테퍼·수동 레인으로. 가격·하중은 추정·가정값")
+    legend_head = "V1-L 구성 (예산 100만 원 이하)"
+
+    C_PLY, C_PLY_E = "#D9B98A", "#8C6A3C"
+    ply = FRAME == "plywood"
+
+    fig = plt.figure(figsize=(15, 8.6))
+    ax = fig.add_axes([0.0, 0.0, 0.64, 0.91])
+    ax.set_aspect("equal")
+    ax.axis("off")
+    A = m3.Axo(26.0, 20.0)
+
+    # ---- geometry (mm, pan rim z = 0, X = drag / bed direction; values from _chief/work/mech/v1l_mech.md §2)
+    FLOOR, BENCH = -1000.0, -380.0             # bench top lowered so the base top sits 315 below the pan rim
+    BASE_TOP = -315.0                           # tower top 955 above the base = z_u 640
+    BX0, BX1, BY = -500.0, 500.0, 280.0         # base 1000 x 560
+    XB = -30.0                                  # bridge (tower apex / beam) centre X
+    Z_L, Z_U = 420.0, 640.0                     # 4080 cross-beam centre heights, 80 face along X
+    TY = 240.0                                  # towers at y = +-240
+    X, Z, TH = 70.0, -20.0, -30.0               # scoop pivot C (column centre), attack pose
+    B0 = X - 200.0                              # bed origin: lane start (local 110) + 90 under the head
+    HX0, HX1, HW = B0 + 5, B0 + 485, 142.5      # insulated holder 480 x 285
+    PX0, PX1, PW = B0 + 65, B0 + 425, 82.5      # gelato pan 360 x 165 (half width)
+    LX0, LX1 = B0 + 110, B0 + 380               # lanes, 270 mm
+    CUPX = B0 + 576                             # cup centre: 466 from the lane start
+    RAIL_X = (-350.0, 450.0)
+    if ply:
+        DECK = (-302.0, -284.0)                 # 18T plywood deck on the blocks
+    else:
+        DECK = (-282.0, -276.0)                 # 6T deck on a 2040 bed frame
+    PLAT_TOP = -176.0                           # holder bottom (XPS 50 + ply 6 below the pan floor)
+    COL = (X - 40, X + 40, -20.0, 20.0, Z + 300, Z + 800)     # 4080 Z column, 500 long
+
+    def shade(n):
+        nx, ny, nz = n
+        return 0.78 + 0.22 * max(nz, 0) - 0.18 * max(-nz, 0) + 0.14 * max(-ny, 0) + 0.02 * max(ny, 0)
+
+    def slab(poly, plane, t0, t1, color, ec="#3b4650", lw=0.5, alpha=1.0):
+        """Polygon in the 'xz' (extruded along y) or 'yz' (extruded along x) plane, added to A's face list."""
+        poly = np.asarray(poly, float)
+        if np.sum(poly[:, 0] * np.roll(poly[:, 1], -1) - np.roll(poly[:, 0], -1) * poly[:, 1]) < 0:
+            poly = poly[::-1]
+
+        def P(u, v, t):
+            return (u, t, v) if plane == "xz" else (t, u, v)
+
+        def N(nu, nt, nv):
+            return np.array((nu, nt, nv) if plane == "xz" else (nt, nu, nv))
+        faces = [([P(u, v, t0) for u, v in poly], N(0, -1, 0)), ([P(u, v, t1) for u, v in poly], N(0, 1, 0))]
+        for (u0, v0), (u1, v1) in zip(poly, np.roll(poly, -1, axis=0)):
+            L = math.hypot(u1 - u0, v1 - v0)
+            faces.append(([P(u0, v0, t0), P(u1, v1, t0), P(u1, v1, t1), P(u0, v0, t1)],
+                          N((v1 - v0) / L, 0, -(u1 - u0) / L)))
+        rgb = np.array(matplotlib_colors.to_rgb(color))
+        for verts, n in faces:
+            if n @ A.grad >= 0:
+                continue
+            Pp = [A.proj(v) for v in verts]
+            A.faces.append((np.mean([p[2] for p in Pp]), [(p[0], p[1]) for p in Pp],
+                            tuple(np.clip(rgb * shade(n), 0, 1)), ec, lw, alpha))
+
+    def bar_xz(p0, p1, w, y0, y1, color, **kw):
+        """Straight member between two points of the XZ plane, in-plane width w, from y0 to y1."""
+        (x0, z0), (x1, z1) = p0, p1
+        L = math.hypot(x1 - x0, z1 - z0)
+        nx, nz = -(z1 - z0) / L * w / 2, (x1 - x0) / L * w / 2
+        slab([(x0 + nx, z0 + nz), (x1 + nx, z1 + nz), (x1 - nx, z1 - nz), (x0 - nx, z0 - nz)], "xz", y0, y1, color, **kw)
+
+    def tower(ys, alpha=1.0):
+        y0, y1 = (ys * TY - 9, ys * TY + 9) if ply else (ys * TY - 10, ys * TY + 10)
+        if ply:
+            slab([(XB - 450, BASE_TOP), (XB + 450, BASE_TOP), (XB + 18, Z_U + 20), (XB - 18, Z_U + 20)], "xz", y0, y1,
+                 C_PLY, ec=C_PLY_E, lw=0.7, alpha=alpha)
+        else:
+            for s in (-1, 1):
+                bar_xz((XB + s * 450, BASE_TOP), (XB + s * 12, Z_U + 20), 40, y0, y1, m.C_ALU)
+            hw = 450 * (Z_U - Z_L) / (Z_U - BASE_TOP) + 20
+            A.box(XB - hw, XB + hw, y0, y1, Z_L - 20, Z_L + 20, m.C_ALU)                  # horizontal tie at z_l
+            A.box(XB - 10, XB + 10, y0, y1, Z_L + 20, Z_U - 20, m.C_ALU)                  # post tie -> apex
+        # 2020 knee brace between the tower and the lower cross beam (side force): under the beam on the
+        # plywood plate (as in the mech sketch), above it on the profile post (no member below z_l there)
+        if ply:
+            kb = [(ys * (TY - 10), Z_L - 150), (ys * (TY - 10), Z_L - 122), (ys * (TY - 122), Z_L - 20),
+                  (ys * (TY - 150), Z_L - 20)]
+        else:
+            kb = [(ys * (TY - 12), Z_L + 150), (ys * (TY - 12) - ys * 8, Z_L + 162), (ys * (TY - 130), Z_L + 28),
+                  (ys * (TY - 118), Z_L + 16)]
+        slab(kb, "yz", XB - 10, XB + 10, m.C_ALU)
+
+    # ---- floor, bench, foot switch
+    FL = [(-650, -560, FLOOR), (650, -560, FLOOR), (650, 400, FLOOR), (-650, 400, FLOOR)]
+    ax.add_patch(Polygon(A.pts(FL), closed=True, fc="#EEF1F4", ec="none", zorder=0.5))
+    for lx in (-600, 570):
+        for ly in (-340, 310):
+            A.box(lx, lx + 30, ly, ly + 30, FLOOR, BENCH - 30, "#B9C2CA")
+    A.box(-620, 620, -360, 360, BENCH - 30, BENCH, "#D5DADF", ec="#98A3AD")                # lab bench top
+    A.box(-80, 100, -540, -420, FLOOR, FLOOR + 38, "#26313d", ec="#111")                     # foot switch
+    A.box(-70, 90, -532, -432, FLOOR + 38, FLOOR + 48, "#4A5866", ec="#111", lw=0.4)
+    A.draw(ax, A.flush(), 1)
+
+    # ---- acrylic side panel at +Y (behind everything)
+    back = A.pts([(XB - 450, BY + 10, BASE_TOP), (XB + 450, BY + 10, BASE_TOP), (XB + 450, BY + 10, 560),
+                  (XB - 450, BY + 10, 560)])
+    ax.add_patch(Polygon(back, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.8, alpha=0.08, zorder=1.5))
+
+    # ---- base, feet, rails, X screw + motor, control box, back tower
+    for fx in (BX0 + 20, BX1 - 60):
+        for fy in (-BY + 20, BY - 60):
+            A.box(fx, fx + 40, fy, fy + 40, BENCH, BASE_TOP - 20, "#4A5866", ec="#222")      # levelling feet
+    if ply:
+        A.box(BX0, BX1, -BY, BY, BASE_TOP - 18, BASE_TOP, C_PLY, ec=C_PLY_E, lw=0.7)
+    else:
+        for y0 in (-BY, BY - 40, -160, 120):
+            A.box(BX0, BX1, y0, y0 + 40, BASE_TOP - 20, BASE_TOP, m.C_ALU)
+        for x0 in (BX0, BX1 - 40, -350):
+            A.box(x0, x0 + 40 if x0 != -350 else -330, -BY + 40, BY - 40, BASE_TOP - 20, BASE_TOP, m.C_ALU)
+    A.draw(ax, A.flush(), 1.9)                  # base first: its large top face must not sort over the parts on it
+    for yr in (-140.0, 140.0):
+        A.box(*RAIL_X, yr - 6, yr + 6, BASE_TOP, BASE_TOP + 8, "#44505b", lw=0.3)            # linear rails
+    A.box(-250, 350, -4, 4, -299, -291, "#8C96A0", lw=0.2)                                   # TR8 lead 4 x 600
+    A.box(-266, -250, -22, 22, BASE_TOP, -273, "#26313D")                                    # KFL08 (fixed end)
+    A.box(350, 362, -18, 18, BASE_TOP, -277, "#26313D")                                      # far support
+    A.box(-330, -282, -21, 21, BASE_TOP, -273, "#2E3A46")                                    # X NEMA17
+    A.box(-485, -365, 95, 215, BASE_TOP, BASE_TOP + 70, "#34414E", ec="#161d24")             # control box
+    A.box(-470, -440, 95, 99, BASE_TOP + 44, BASE_TOP + 56, "#4CAF50", ec="none")           # status LED strip
+    tower(+1)
+    A.draw(ax, A.flush(), 2)
+
+    # ---- X bed (moving), force platform, insulated holder, pan, index pins, cup holder
+    for yr in (-140.0, 140.0):
+        for bx in (185.0, 465.0):
+            A.box(B0 + bx - 22, B0 + bx + 22, yr - 13, yr + 13, BASE_TOP + 4, DECK[0], m.C_X, ec="#1E4E80")
+    if not ply:
+        for yr in (-140.0, 140.0):
+            A.box(B0, B0 + 650, yr - 20, yr + 20, DECK[0] - 20, DECK[0], m.C_X, ec="#1E4E80")
+    A.draw(ax, A.flush(), 2.9)
+    if ply:
+        A.box(B0, B0 + 650, -220, 220, *DECK, C_PLY, ec=m.C_X, lw=0.9)
+    else:
+        A.box(B0, B0 + 650, -220, 220, *DECK, "#D6E4F3", ec=m.C_X, lw=0.9)
+    A.draw(ax, A.flush(), 3.0)
+    d1 = DECK[1]
+    A.box(B0 + 20, B0 + 470, -200, 200, d1, d1 + 10, "#F1C4C6", ec=m.C_SENSOR)              # platform base plate
+    A.box(B0 + 90, B0 + 330, -22, 22, d1 + 10, d1 + 42, m.C_SENSOR, ec="#8a1f23")           # bar cell, vertical
+    A.box(B0 + 380, B0 + 420, -110, 110, d1 + 16, PLAT_TOP - 30, m.C_SENSOR, ec="#8a1f23")  # bar cell, X (upright)
+    A.box(B0 + 60, B0 + 64, -150, 150, d1 + 42, PLAT_TOP - 14, "#B7BEC5", ec="#6d7780", lw=0.3)  # leaf-spring flexures
+    A.box(B0 + 440, B0 + 444, -150, 150, d1 + 10, PLAT_TOP - 14, "#B7BEC5", ec="#6d7780", lw=0.3)
+    A.draw(ax, A.flush(), 3.05)
+    A.box(B0, B0 + 490, -215, 215, PLAT_TOP - 14, PLAT_TOP, "#F1C4C6", ec=m.C_SENSOR)      # platform top plate
+    A.draw(ax, A.flush(), 3.1)
+    for xp in (HX0 + 30, HX1 - 30):                                                          # index holes (other lanes)
+        for dy in (-38.0, 38.0):
+            q = A.proj((xp, -HW - 16 + dy, PLAT_TOP))
+            ax.add_patch(Ellipse(q[:2], 9, 4.5, fc="#3b4650", ec="none", zorder=3.12))
+    A.box(HX0, HX1, -HW, HW, PLAT_TOP, 0, "#E9EEF3", ec="#9aa6b2")                         # XPS holder
+    A.draw(ax, A.flush(), 3.15)
+    rim = A.pts([(PX0, -PW, 0), (PX1, -PW, 0), (PX1, PW, 0), (PX0, PW, 0)])
+    op = Polygon(rim, closed=True, fc="#dcd6c9", ec="#6f6656", lw=1.0, zorder=3.2)
+    ax.add_patch(op)
+    ic = Polygon(A.pts([(PX0, -PW, -20), (PX1, -PW, -20), (PX1, PW, -20), (PX0, PW, -20)]), closed=True,
+                 fc="#EFDDA6", ec="none", zorder=3.21)
+    ax.add_patch(ic)
+    ic.set_clip_path(op)
+    for yl in (-38.0, 0.0, 38.0):
+        q = A.pts([(LX0, yl, -20), (LX1, yl, -20)])
+        ln, = ax.plot(q[:, 0], q[:, 1], color=m.C_Y, lw=1.6, ls=(0, (4, 2)), zorder=3.22)
+        ln.set_clip_path(op)
+    for xp in (HX0 + 30, HX1 - 30):                                                          # index pins (lane 0)
+        A.box(xp - 14, xp + 14, -HW - 28, -HW, -150, -138, "#C9CED4", ec="#6d7780", lw=0.4)  # tab on the holder
+        A.box(xp - 5, xp + 5, -HW - 21, -HW - 11, PLAT_TOP, -118, "#26313D", ec="#111", lw=0.4)
+    A.box(B0 + 516, B0 + 636, -60, 60, d1, -5, "#DCE3E8", ec="#8E9AA5")                    # cup holder
+    A.draw(ax, A.flush(), 3.3)
+    ax.add_patch(Polygon(A.rim_ellipse(CUPX, 0, -5, 46), closed=True, fc="#c9d1d8", ec="#8E9AA5", lw=0.9, zorder=3.4))
+    ax.add_patch(Polygon(A.rim_ellipse(CUPX, 0, 0, 40), closed=True, fc="white", ec="#8E9AA5", lw=0.9, zorder=3.45))
+
+    # ---- fixed bridge: two 4080 cross beams (80 along X), then the Z column in front (+X) of them
+    for zc in (Z_L, Z_U):
+        A.box(XB - 40, XB + 40, -TY - 10, TY + 10, zc - 20, zc + 20, m.C_ALU)
+    A.draw(ax, A.flush(), 4)
+    A.box(*COL, m.C_Z_L, ec=m.C_Z)                                                           # 4080 Z column (moves)
+    A.draw(ax, A.flush(), 4.1)
+    A.box(COL[0], COL[1], -60, 20, COL[5], COL[5] + 8, "#8C96A0")                            # motor plate
+    A.box(X - 21, X + 21, -56, -14, COL[5] + 8, COL[5] + 56, "#2E3A46")                      # Z NEMA17
+    A.box(X - 4, X + 4, -39, -31, COL[5] - 300, COL[5], "#8C96A0", lw=0.2)                   # TR8 lead 2 x 300
+    A.box(XB + 40, X + 10, -47, -23, Z_U - 12, Z_U + 12, "#8C96A0")                          # nut bracket on z_u beam
+    A.box(X - 9, X + 9, -44, -26, Z_U - 16, Z_U + 16, "#C9A227", ec="#7a5f10")               # brass nut
+    A.draw(ax, A.flush(), 4.2)
+
+    # ---- head: theta stepper + 1:27, drip umbrella, stem, dual push-rods, scoop
+    A.box(X - 60, X + 60, -45, 45, Z + 200, Z + 300, m.C_HEAD, ec="#1b242e")
+    A.box(X - 10, X + 50, -95, -45, Z + 225, Z + 285, m.C_TH, ec="#8a4a00")                  # theta stepper + gearbox
+    A.box(X - 85, X + 85, -70, 70, Z + 195, Z + 200, m.C_FOOD, ec="#a86d00", lw=0.4)          # drip umbrella
+    A.box(X - 7.5, X + 7.5, -7.5, 7.5, Z + 4, Z + 195, "#D7DCE1", ec=m.C_FOOD)               # stem
+    for ph in (0.0, 90.0):
+        lx, lz = m.lever_tip(X, Z, TH + ph)
+        A.box(lx - 3.5, lx + 3.5, -3.5 - (ph / 90.0) * 12, 3.5 - (ph / 90.0) * 12, lz, lz + 195, "#E7C77F",
+              ec=m.C_FOOD, lw=0.4)
+    A.draw(ax, A.flush(), 5)
+    m3.draw_scoop3d(ax, A, X, 0.0, Z, TH, zorder=6)
+
+    # ---- front tower (y = -240) + safety parts in front
+    tower(-1, alpha=0.28 if ply else 1.0)
+    A.draw(ax, A.flush(), 6.6)
+    if ply:                                                                                  # outline of the see-through plate
+        q = A.pts([(XB - 450, -TY - 9, BASE_TOP), (XB + 450, -TY - 9, BASE_TOP), (XB + 18, -TY - 9, Z_U + 20),
+                   (XB - 18, -TY - 9, Z_U + 20)])
+        ax.add_patch(Polygon(q, closed=True, fc="none", ec=C_PLY_E, lw=1.0, zorder=6.7))
+    A.box(150, 220, -345, -295, BENCH, BENCH + 58, "#F2C500", ec="#7a6400")                 # E-stop housing
+    A.draw(ax, A.flush(), 7)
+    es = A.proj((185, -345, BENCH + 30))
+    ax.add_patch(Circle(es[:2], 17, fc="#8a1f23", ec="none", zorder=7.1))
+    ax.add_patch(Circle(es[:2], 13, fc="#D0021B", ec="none", zorder=7.2))
+    front = A.pts([(XB - 450, -BY - 10, BASE_TOP), (XB + 450, -BY - 10, BASE_TOP), (XB + 450, -BY - 10, 560),
+                   (XB - 450, -BY - 10, 560)])
+    ax.add_patch(Polygon(front, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.8, alpha=0.08, zorder=8))
+
+    # ---- axis arrows (bed X, column Z) and the theta tag
+    def arr(p0, p1, lab, col, at=1.0, off=(0, 0)):
+        a_, b_ = A.proj(p0)[:2], A.proj(p1)[:2]
+        ax.add_patch(FancyArrowPatch(a_, b_, arrowstyle="<|-|>", mutation_scale=13, lw=2.2, color=col, zorder=12))
+        ax.text(a_[0] + (b_[0] - a_[0]) * at + off[0], a_[1] + (b_[1] - a_[1]) * at + off[1], lab, color="white",
+                fontsize=11, fontweight="bold", ha="center", va="center", zorder=13,
+                bbox=dict(fc=col, ec=col, boxstyle="round,pad=0.2"))
+    arr((B0 - 20, -236, DECK[0] - 5), (B0 + 380, -236, DECK[0] - 5), "X", m.C_X, 1.0, (26, 0))
+    arr((X + 90, 0, Z + 380), (X + 90, 0, Z + 620), "Z", m.C_Z, 0.5, (26, 0))
+    q = A.proj((X - 60, -45, Z + 255))
+    ax.text(q[0] - 30, q[1], "θ", color="white", fontsize=11, fontweight="bold", ha="center", va="center", zorder=13,
+            bbox=dict(fc=m.C_TH, ec=m.C_TH, boxstyle="round,pad=0.2"))
+    o = A.proj(FL[0])
+    m3.draw_triad(ax, A, (o[0] + 40, o[1] + 30), L=110, fs=8)
+
+    # ---- numbered callouts, two columns
+    calls = [
+        (1, (-300, -BY, BASE_TOP - 9)), (2, (B0 + 600, -220, DECK[1])), (3, (XB + 40, -150, Z_U)),
+        (4, (X + 40, -20, Z + 700)), (5, (X + 20, -95, Z + 255)), (6, (X + 7.5, -7.5, Z + 110)),
+        (7, (PX1 - 40, -PW, 0)), (8, (HX1 - 30, -HW - 16, -118)), (9, (B0 + 300, -215, PLAT_TOP - 7)),
+        (10, (CUPX, -60, -50)), (11, (-425, 95, BASE_TOP + 35)), (12, (185, -345, BENCH + 30)),
+        (13, (10, -540, FLOOR + 20)), (14, (XB - 450, -BY - 10, 470)),
+    ]
+    anchors = {n: A.proj(p3)[:2] for n, p3 in calls}
+    P = A.pts(FL + [(X, -14, COL[5] + 70)])
+    x_lo, x_hi, y_lo, y_hi = P[:, 0].min(), P[:, 0].max(), P[:, 1].min(), P[:, 1].max()
+    mid = 0.5 * (x_lo + x_hi)
+    left = sorted([n for n in anchors if anchors[n][0] < mid], key=lambda n: -anchors[n][1])
+    right = sorted([n for n in anchors if anchors[n][0] >= mid], key=lambda n: -anchors[n][1])
+    for side, col_x in ((left, x_lo - 120), (right, x_hi + 120)):
+        ys = [anchors[n][1] for n in side]
+        for i in range(1, len(ys)):
+            ys[i] = min(ys[i], ys[i - 1] - 115)
+        for i in range(len(ys) - 2, -1, -1):
+            ys[i] = max(ys[i], ys[i + 1] + 115)
+        shift = max(0.0, max(ys) - (y_hi - 30))
+        for n, ty in zip(side, [y - shift for y in ys]):
+            ax_, ay_ = anchors[n]
+            ax.plot([ax_, col_x], [ay_, ty], color="#44505b", lw=0.7, zorder=20)
+            ax.add_patch(Circle((ax_, ay_), 8, fc="#1F2A36", ec="none", zorder=20))
+            ax.add_patch(Circle((col_x, ty), 38, fc="#1F2A36", ec="white", lw=1.0, zorder=21))
+            ax.text(col_x, ty, str(n), color="white", ha="center", va="center", fontsize=9, fontweight="bold", zorder=22)
+    ax.set_xlim(x_lo - 180, x_hi + 180)
+    ax.set_ylim(y_lo - 20, y_hi + 40)
+
+    lg = fig.add_axes([0.645, 0.04, 0.345, 0.87])
+    lg.axis("off")
+    lg.set_xlim(0, 1)
+    lg.set_ylim(0, 1)
+    lg.text(0.0, 0.99, legend_head, fontsize=13, fontweight="bold", va="top", color=m.C_TEXT)
+    for i, (a_, b_) in enumerate(items):
+        y = 0.935 - i * 0.063
+        lg.add_patch(Circle((0.025, y - 0.012), 0.018, fc="#1F2A36", ec="none", transform=lg.transAxes))
+        lg.text(0.025, y - 0.012, str(i + 1), color="white", ha="center", va="center", fontsize=7.5, fontweight="bold")
+        lg.text(0.065, y, a_, fontsize=9.3, va="top", color=m.C_TEXT, fontweight="bold")
+        lg.text(0.065, y - 0.027, b_, fontsize=8.2, va="top", color="#51606e")
+    if ply:
+        lg.text(0.0, 0.03, "앞쪽 합판 타워와 아크릴 옆판은 비쳐 보이게 그렸다.", fontsize=8, va="bottom", color="#7a8793")
+    fig.text(0.012, 0.965, title, fontsize=16, fontweight="bold", color=m.C_TEXT)
+    fig.text(0.012, 0.937, subtitle, fontsize=9.5, color="#51606e")
+    save(fig, "fig9_v1l_budget_rig.png")
+
+
 if __name__ == "__main__":
     fig_axonometric()
     fig_three_view()
@@ -1002,3 +1312,4 @@ if __name__ == "__main__":
     fig_y_axis()
     fig_v1s()
     fig_alternatives()
+    fig_v1l()
