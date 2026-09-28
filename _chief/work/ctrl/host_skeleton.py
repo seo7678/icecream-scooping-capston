@@ -52,11 +52,11 @@ class Cfg:
     #   X: 팬 안쪽 벽(0) … 반대 벽(360) 방향, Z: 팬 테두리 기준 C 높이(위 +), θ: GRBL Y 채널 [°]
     PAN_LEN = 360.0            # mm (A40)                                           # ASSUMPTION
     R_SCOOP = 35.0             # mm (A06)                                           # ASSUMPTION
-    X_HOME = 0.0
+    X_HOME = 25.0              # X 원점 스위치 (베드 행정 466 mm = 25 … 491, 기계 담당 §3)   # ASSUMPTION
     X_LANE = (45.0, 315.0)     # C 드래그 범위 = 벽 여유 R + 10                     # ASSUMPTION
     X_WIN = (43.0, 317.0)      # Nano X-창 스위치(하드웨어 R7 이중화) 작동 범위      # ASSUMPTION
-    X_CUP = 430.0              # 베드 위 컵 위치                                    # ASSUMPTION
-    X_LIM = (-2.0, 460.0)      # 소프트 리밋 ($130)                                  # ASSUMPTION
+    X_CUP = 471.0              # 컵 중심 = 팬 360 + 홀더 벽 56 + 틈 10 + 컵 반경 45 (기계 담당)  # ASSUMPTION
+    X_LIM = (25.0, 491.0)      # 소프트 리밋 ($130 = 466)                            # ASSUMPTION
     Z_TOP, Z_SAFE = 100.0, 60.0   # Z_SAFE = 테두리 + R + 25 (A31 방식)             # ASSUMPTION
     Z_LIM = (-75.0, 100.0)     # C 최저 = 팬 바닥 −120 + 10 + R                     # ASSUMPTION
     TH_HOME, TH_ATTACK, TH_CAPTURE, TH_EJECT = 95.0, -30.0, 90.0, -120.0            # ASSUMPTION
@@ -81,7 +81,7 @@ class Cfg:
     F_STOP_HOST = 105.0
     F_STOP_HW = 120.0
     F_TRAVEL = 30.0            # 이송·Z 이동 중 예상 밖 힘 = 충돌 의심
-    M_PLAT = 6.0               # kg, 관성 보정·임계 여유용 추정치                         # ASSUMPTION
+    M_PLAT = 7.2               # kg, S-빔 위 질량(기계 담당 m_top) — 관성 여유용            # ASSUMPTION
     INERTIA_MASK = 3.0         # mm, 드래그 시작 후 힘 평균에서 뺄 거리(가속+정착)        # ASSUMPTION
 
     # 깊이 제어
@@ -275,7 +275,7 @@ class NanoClient:
 # MOCK: 가짜 GRBL 1.1 (텍스트 프로토콜, 15블록 플래너, feed hold, 도어, 프로브, 소프트 리셋, 소프트 리밋)
 # =====================================================================================
 class MockGrblPort:
-    AX_V = (100.0, 200.0, 30.0)      # $110–$112 [단위/s] — X는 host가 V_TRAVEL로 제한
+    AX_V = (60.0, 150.0, 30.0)       # $110–$112 [단위/s] — 문서 §2.3 설정과 같게(X 60 mm/s 상한)
     AX_A = (500.0, 1000.0, 300.0)    # $120–$122
     SEG_COAST = 0.040                # s, feed hold 후 감속 시작까지 등속 (확인 필요 — v1l_control_sim §2)
     PLANNER = 15
@@ -284,7 +284,7 @@ class MockGrblPort:
     def __init__(self, clock, cfg):
         self.clock, self.cfg = clock, cfg
         self.lim = [cfg.X_LIM, cfg.TH_LIM, cfg.Z_LIM]
-        self.pos = [150.0, 20.0, 90.0]   # 전원 투입 위치 (원점 모름)
+        self.pos = [150.0, 20.0, 90.0]   # 전원 투입 위치 (원점 모름, Z는 Z_SAFE 위에 두고 끈다)
         self.plan_pos = list(self.pos)
         self.vel = [0.0, 0.0, 0.0]
         self.acc = [0.0, 0.0, 0.0]
@@ -493,8 +493,9 @@ class MockGrblPort:
         # 도어 입력은 레벨 감지: 열리면 hold
         if self.door_open() and not self.alarm and self.hold_kind != "Door":
             if self.cur is not None:
-                if self.hold_kind == "Hold" and self.hold == "done":
-                    self.hold_kind = "Door"
+                if self.hold_kind == "Hold":
+                    self.hold_kind = "Door"               # 이미 hold 중이면 감속 계획은 그대로, 종류만 도어로
+                    self.events.append((self.clock(), "DOOR_DURING_HOLD", list(self.pos)))
                 else:
                     self.hold_kind, self.hold, self.coast = "Door", "coast", self.SEG_COAST
                     self.events.append((self.clock(), "DOOR_START", list(self.pos)))
@@ -604,7 +605,7 @@ class MockNanoPort:
     NOISE = 0.05           # N rms                                                    # ASSUMPTION
     K_C = 20.0             # N/mm, 정지 압입 강성(부드러운 쪽)                          # ASSUMPTION
     C_ZZ_TRUE, C_ZX_TRUE = 0.033, 0.011   # 실제 구조(교정값보다 +10 %)                   # ASSUMPTION
-    M_PLAT_TRUE = 6.5      # kg                                                       # ASSUMPTION
+    M_PLAT_TRUE = 7.2      # kg (기계 담당 m_top)                                      # ASSUMPTION
 
     def __init__(self, clock, grbl, ice, cfg):
         self.clock, self.g, self.ice, self.cfg = clock, grbl, ice, cfg
@@ -634,6 +635,7 @@ class MockNanoPort:
         self.cap_added = False
         self.collision_mm = 0.0
         self.z_act = grbl.pos[2]
+        self.defl = 0.0            # 구조 처짐 [mm] — 1차 지연(τ 10 ms)으로 따라감(명시적 갱신의 진동 방지)
 
     # ---- 호스트 쪽
     def write(self, data: bytes):
@@ -698,8 +700,10 @@ class MockNanoPort:
         cfg, g = self.cfg, self.g
         x, th, zc = g.pos
         vx = g.vel[0]
-        # 구조 컴플라이언스: 스쿱이 받는 힘만큼 위로 처짐 (직전 틱 힘 사용)
-        self.z_act = zc + self.C_ZZ_TRUE * self.fz + self.C_ZX_TRUE * self.fx
+        # 구조 컴플라이언스: 스쿱이 받는 힘만큼 위로 처짐 (직전 틱 힘, 1차 지연)
+        target = self.C_ZZ_TRUE * self.fz + self.C_ZX_TRUE * self.fx
+        self.defl += (target - self.defl) * min(1.0, dt / 0.010)
+        self.z_act = zc + self.defl
         z_rim = self.z_act - B_ATTACK
         fx = fz = 0.0
         if abs(th - cfg.TH_ATTACK) < 2.0:
@@ -1297,8 +1301,8 @@ class Host:
         (2) 게이트 우회(버그 모의): 원시 G-code를 직접 보냄 → Nano X-창/Z-높이 인터록이 도어를 끊어야 함."""
         ok = self.request_xy_move(self.cfg.X_CUP, kind=TRAVEL)
         self.result["gate_low_rejected"] = not ok
-        self._log("GATE_BYPASS_TEST", "게이트를 거치지 않고 G1 X430 전송(버그 모의)")
-        print("             게이트 우회 시험: G1 X430 직접 전송 (버그 모의)")
+        self._log("GATE_BYPASS_TEST", f"게이트를 거치지 않고 G1 X{self.cfg.X_CUP:.0f} 전송(버그 모의)")
+        print(f"             게이트 우회 시험: G1 X{self.cfg.X_CUP:.0f} 직접 전송 (버그 모의)")
         self.grbl.send_line(f"G1 X{self.cfg.X_CUP:.1f} F{self.cfg.V_TRAVEL*60:.0f}")
         self.wait_until(lambda: False, 30.0, "BYPASS_NOT_STOPPED")
 

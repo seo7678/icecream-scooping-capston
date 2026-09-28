@@ -75,7 +75,8 @@ F_STOP_A37 = 0.80 * F_DESIGN  # A37 비율
 K_VERT = 0.5              # |F_z|/F_x (A04, A28)                              # ASSUMPTION
 U_CASES = (40.0, 90.0, 160.0, 250.0)   # kPa (A02)                           # ASSUMPTION
 DFDX_CUT = (160.0 - 90.0) * 1e-3 * 624.0 / 10.0   # N/mm: 경도 90→160 kPa가 10 mm에 걸쳐 변할 때  # ASSUMPTION
-K_PATH = (40.0, 100.0, 200.0)   # N/mm, 스쿱 끝 ↔ 팬 X 방향 경로 강성 (3D프린터식 ~37, 보강 ~212: capstone_alternatives §2)  # ASSUMPTION
+F_JAM = 329.0             # N, X 스톨 추력 (mech/v1l_mech_calc_output §1, 계산값)                # ASSUMPTION
+K_PATH = (70.0, 230.0, 290.0)   # N/mm, 스쿱 끝 ↔ 팬 X 경로 강성: L-A-lite 71, L-A 231–287 (mech/v1l_mech_calc_output §2.1, 계산값)  # ASSUMPTION
 
 # ---- HX711 (AVIA 데이터시트 값 — 확인 필요)
 HX711 = {
@@ -111,8 +112,9 @@ DELTA_TH = {"단단함(p=1 MPa)": 0.03, "부드러움(p=0.3 MPa)": 0.31}   # mm 
 PROBE_MARGIN = 5.0        # mm, Z_est 위에서 저속 전환 (팬 지도 + 1점 터치오프 이력)    # ASSUMPTION
 
 # ---- 이동 베드
-M_PLAT = (5.0, 6.0, 7.0)  # kg, 팬 + 단열 홀더 + 아이스크림 (과제 가정 5–7 kg)          # ASSUMPTION
-K_SBEAM = (1.5e6, 0.5e6)  # N/m, S-빔 + 레일 직렬 강성 (20 kg S-빔 정격 처짐 ~0.1–0.2 mm 수준)  # ASSUMPTION
+M_PLAT = (5.0, 6.0, 7.2)  # kg, S-빔 위 질량 (과제 5–7 kg, 기계 담당 m_top 7.2 kg)        # ASSUMPTION
+M_TRUE, M_EST = 7.2, 6.2  # kg, 모의 참값 / 보정에 쓰는 추정값(1 kg 틀림)                     # ASSUMPTION
+K_SBEAM = (3.5e6, 1.5e6, 0.5e6)  # N/m: S-빔 50 kg 3504 N/mm(기계 담당), 레일·체결 포함 낮은 경우 2개  # ASSUMPTION
 ZETA_PLAT = 0.05          # 플랫폼 진동 감쇠비                                        # ASSUMPTION
 HX_NOISE_N = 0.05         # N rms, 모터 구동 중 HX711 잡음                           # ASSUMPTION
 
@@ -258,11 +260,10 @@ p("")
 STEP_LIMIT = 30e3   # Hz                                                              # ASSUMPTION(확인 필요)
 rows = []
 for axis, lead, gear, us, v, unit in [
-        ("X 베드", 5.0, 1, 8, 100.0, "mm/s"), ("X 베드", 5.0, 1, 4, 100.0, "mm/s"),
-        ("X 베드", 10.0, 1, 8, 100.0, "mm/s"), ("X 베드", 8.0, 1, 8, 100.0, "mm/s"),
-        ("Z", 8.0, 1, 8, 30.0, "mm/s"), ("Z", 5.0, 1, 16, 30.0, "mm/s"),
-        ("θ (Y 채널, °)", None, 27, 8, 150.0, "°/s"), ("θ (Y 채널, °)", None, 27, 16, 150.0, "°/s"),
-        ("θ (Y 채널, °)", None, 5, 16, 150.0, "°/s")]:
+        ("X 베드 (TR8 리드 4)", 4.0, 1, 8, 60.0, "mm/s"), ("X 베드 (TR8 리드 4)", 4.0, 1, 8, 100.0, "mm/s"),
+        ("X 베드 (TR8 리드 4)", 4.0, 1, 4, 100.0, "mm/s"),
+        ("Z (TR8 리드 2)", 2.0, 1, 8, 40.0, "mm/s"), ("Z (TR8 리드 2)", 2.0, 1, 4, 40.0, "mm/s"),
+        ("θ (Y 채널, °)", None, 27, 8, 150.0, "°/s"), ("θ (Y 채널, °)", None, 27, 16, 150.0, "°/s")]:
     if lead:
         spu = 200 * us / lead
         drive = f"리드 {lead:.0f} mm, 1/{us}"
@@ -273,8 +274,8 @@ for axis, lead, gear, us, v, unit in [
     rows.append([axis, drive, f"{spu:.1f} step/{unit.split('/')[0]}", f"{v:.0f} {unit}",
                  f"{f_step/1e3:.1f} kHz", "●" if f_step <= STEP_LIMIT * 0.8 else ("△" if f_step <= STEP_LIMIT else "✗")])
 table(["축", "구동", "분해능", "최대 속도", "스텝 주파수", "≤ 24 kHz(●) / ≤ 30(△)"], rows)
-p("- θ 닫기 150 °/s는 120°를 0.8 s에 도는 값(A32의 닫기 0.8 s). 1:27 유성기어면 1/8 마이크로스텝까지.")
-p("- X는 리드 5 mm에서 1/4, 리드 10 mm에서 1/8이면 100 mm/s 이송이 가능하다. 드래그(≤ 40 mm/s)는 어느 조합도 여유.")
+p("- 구동계는 기계 담당 L-A(`mech/v1l_mech.md`): X TR8 리드 4, Z TR8 리드 2(자립), θ NEMA17 + 1:27. θ 닫기 150 °/s는 120°를 0.8 s에 도는 값(A32).")
+p("- **X와 Z는 1/4 마이크로스텝**(분해능 X 0.005 mm, Z 0.0025 mm)이면 이송 100 mm/s·Z 40 mm/s까지 여유. X 1/8은 60 mm/s에서 24 kHz로 경계. θ는 1/8까지.")
 p("")
 
 # =====================================================================================
@@ -324,10 +325,12 @@ p("### 2.4 감속도 민감도 (경로 B, v = 30 mm/s, worst)")
 p("")
 rows = []
 tB = lat_total("pin_hold")[2]
-for a in (250.0, 500.0, 1000.0):
+for a in (200.0, 250.0, 500.0, 1000.0):
     s = stop_distance(30.0, tB, "pin_hold", a)
     rows.append([f"{a:.0f}", f2(30.0 ** 2 / (2 * a)), f2(s), f1(DFDX_CUT * s)])
 table(["a [mm/s²]", "감속 거리 [mm]", "총 추가 이동 [mm]", "ΔF 경도 램프 [N]"], rows)
+p("- GRBL은 축마다 가속도가 하나($120)라 드래그용 완만한 램프(예: 200 mm/s²)를 따로 줄 수 없다. 낮추면 정지 거리도 같이 늘어난다.")
+p("")
 
 p("### 2.5 정지 한계 제안")
 p("")
@@ -363,6 +366,8 @@ for k in K_PATH:
         rows.append([f"{k:.0f}", PATH_NAME[path], f2(budget), f1(vmax)])
 table(["경로 강성 k [N/mm]", "경로", "허용 추가 이동 [mm]", "허용 속도 [mm/s]"], rows)
 p("- 강체 충돌은 keep-out(팬 벽 여유)·속도 제한·X 드라이버 전류 제한(스톨 추력)으로 막고, 힘 정지는 경도 변화·과깊이용으로 쓴다.")
+p(f"- 강체 충돌 힘의 실제 상한은 X 스톨 추력이다: 기계 담당 계산 F_JAM ≈ {F_JAM:.0f} N(TR8 리드 4, NEMA17 0.4 N·m). "
+  "위 표의 수백 N 값은 그 전에 모터가 탈조해 멈춘다는 뜻이다(위치 상실 → 재원점). 드라이버 전류를 낮추면 상한도 낮아지지만 드래그 여유(2.25)도 줄어든다.")
 p("")
 
 # =====================================================================================
@@ -653,7 +658,7 @@ p("#### 보상 후 잔여 깊이 오차")
 p("")
 SIGMA_F = 2.0    # N, 등속 구간 평균 힘 측정 오차 (마찰·잔류 관성·잡음)                       # ASSUMPTION
 rows = []
-for czz in (0.01, 0.03, 0.05):
+for czz in (0.002, 0.01, 0.03, 0.05):   # 0.002 ≈ 기계 담당 추정(0.08 mm @ F_z 50 N)
     czx = czz / 3.0                                                                          # ASSUMPTION 비율
     for fx in (56.0, 100.0):
         fz = K_VERT * fx
@@ -693,7 +698,7 @@ p("## 5. 이동 베드 관성 — 가속 구간 F_x")
 p("")
 rows = []
 for m in M_PLAT:
-    rows.append([f"{m:.0f}"] + [f1(m * a * 1e-3) for a in (250.0, 500.0, 1000.0, 2000.0)])
+    rows.append([f"{m:.1f}"] + [f1(m * a * 1e-3) for a in (250.0, 500.0, 1000.0, 2000.0)])
 table(["플랫폼 질량 [kg]", "a = 250", "500", "1000", "2000 mm/s² → m·a [N]"], rows)
 for k in K_SBEAM:
     for m in (5.0, 7.0):
@@ -777,22 +782,36 @@ def bed_sim(m_true, m_est, k_s, v=30.0, a=A_X, f_cut0=56.0, dt=1e-4, T=1.2, seed
     return out, lost_mm, series
 
 
-p("### 5.1 시간영역 모의 (v = 30 mm/s, a = 500 mm/s², 절삭력 56 N, m 참값 7 kg / 추정 6 kg) — 모의")
+rows = []
+for k in K_SBEAM:
+    fn = math.sqrt(k / M_TRUE) / (2 * math.pi)
+    x_ = fn / 80.0
+    att = abs(math.sin(math.pi * x_) / (math.pi * x_)) ** HX_ORDER
+    x10 = fn / 10.0
+    att10 = abs(math.sin(math.pi * x10) / (math.pi * x10)) ** HX_ORDER
+    db = lambda g: "< −100" if g < 1e-5 else f"{20*math.log10(g):.0f}"
+    rows.append([f"{k/1e6:.1f}", f"{fn:.0f}", db(att), db(att10)])
+p(f"HX711 필터를 sinc⁴(샘플 주기 길이)로 가정했을 때 플랫폼 진동({M_TRUE:.1f} kg)이 얼마나 줄어드는지:")
+p("")
+table(["S-빔 경로 강성 [N/µm]", "f_n [Hz]", "80 SPS 감쇠 [dB]", "10 SPS 감쇠 [dB]"], rows)
+p("- 80 SPS에서도 에일리어싱 성분이 수십 dB 줄어든다(필터 모양 가정 — 확인 필요, T6). 10 SPS로 내리면 감쇠는 조금 더 크지만 지연이 250 ms 이상 늘어난다(§2.2).")
+p("")
+p(f"### 5.1 시간영역 모의 (v = 30 mm/s, a = 500 mm/s², 절삭력 56 N, m 참값 {M_TRUE:.1f} kg / 추정 {M_EST:.1f} kg) — 모의")
 p("")
 p("오차 기준 = 같은 HX711 필터를 통과한 참 절삭력. 즉 필터 지연 자체는 빼고, 관성·진동이 섞인 양만 본다.")
 p("")
 rows = []
 series_keep = None
 for k in K_SBEAM:
-    res, lost, ser = bed_sim(7.0, 6.0, k)
+    res, lost, ser = bed_sim(M_TRUE, M_EST, k)
     if series_keep is None:
         series_keep = ser
-    fn = math.sqrt(k / 7.0) / (2 * math.pi)
+    fn = math.sqrt(k / M_TRUE) / (2 * math.pi)
     for name, (emax, erms) in res.items():
         rows.append([f"{k/1e6:.1f} ({fn:.0f} Hz)", name, f2(emax), f2(erms)])
 table(["S-빔 경로 강성 [N/µm] (f_n)", "추정 방식", "최대 오차 [N]", "RMS 오차 [N]"], rows)
 p(f"- 등속 구간만 쓰면 레인 양 끝에서 약 {lost:.1f} mm(가속·정착·감속) 동안 판정을 쉰다(레인 {LANE:.0f} mm의 {lost/LANE*100:.1f} %).")
-p("- **과부하 정지 판정은 모든 구간에서 해야 한다.** 가속 구간에는 m·a_max(7 kg × 0.5 m/s² = 3.5 N)만큼 임계를 올리거나 방식 C로 보정한다. "
+p(f"- **과부하 정지 판정은 모든 구간에서 해야 한다.** 가속 구간에는 m·a_max({M_TRUE:.1f} kg × 0.5 m/s² = {M_TRUE*0.5:.1f} N)만큼 임계를 올리거나 방식 C로 보정한다. "
   "u 추정·깊이 적응·부피 적분에는 방식 D(등속 구간 평균)를 쓴다.")
 p("")
 
@@ -834,8 +853,8 @@ p("")
 
 p("## 7. 이 출력에서 ASSUMPTION인 것 (요약)")
 p("")
-p("F_DESIGN 150 N, 경로 강성 40/100/200 N/mm, 경도 램프 4.4 N/mm, HX711 필터 군지연 = 정착/2, GRBL 세그먼트 소진 0–50 ms, "
-  "USB·파이썬 지연, 감속도 500 mm/s², C_zz 0.03·C_zx 0.01 mm/N, σ_F 2 N, 플랫폼 5–7 kg·S-빔 강성, u 경도 시나리오와 변화율. "
+p("F_DESIGN 150 N, 경로 강성 70/230/290 N/mm(기계 담당 계산값), 경도 램프 4.4 N/mm, HX711 필터 군지연 = 정착/2, GRBL 세그먼트 소진 0–50 ms, "
+  "USB·파이썬 지연, 감속도 500 mm/s², C_zz 0.002–0.05·C_zx = C_zz/3 mm/N, σ_F 2 N, 플랫폼 5–7.2 kg·S-빔 강성 0.5–3.5 N/µm, u 경도 시나리오와 변화율. "
   "데이터시트 값(HX711 10/80 SPS, 정착 400/50 ms)과 GRBL 동작은 v1l_control.md '확인 필요' 목록에서 확인한다.")
 p("")
 
@@ -875,7 +894,7 @@ try:
     axes[0].set_ylabel("F_x [N]", color=MUTED, fontsize=8)
     h, lab = axes[0].get_legend_handles_labels()
     fig.legend(h, lab, loc="lower center", ncol=3, frameon=False, fontsize=7, labelcolor=INK)
-    fig.suptitle("Moving-bed inertia in F_x (simulated: 7 kg platform, 500 mm/s^2, 30 mm/s, estimator mass 6 kg)",
+    fig.suptitle(f"Moving-bed inertia in F_x (simulated: {M_TRUE:.1f} kg on S-beam, 500 mm/s^2, 30 mm/s, estimator mass {M_EST:.1f} kg)",
                  x=0.01, ha="left", color=INK, fontsize=9)
     fig.tight_layout(rect=(0, 0.14, 1, 0.95))
     fig.savefig(OUT_FIG, facecolor=SURF)
