@@ -868,6 +868,283 @@ table(["V1-S 항목(BOM ID)", "V1-S 추정가", "V1-L", "근거"], [
     ["힘 플랫폼 20 kg 셀", "–", "S-빔 50 kg + 단일점 30 kg + 기계식 과부하 스톱", "§6 걸림 하중"],
 ])
 
+# ============================================================================= 10. plywood hybrid
+# Chief request 2026-09-28: BOM (elec/v1l_bom.csv) over R8 → frame to plywood hybrid,
+# purchase+shipping (unconditional) <= 880,000 KRW, tip X <= 1 mm @ 100 N (members + joints, mid assumption).
+# Extra sources:
+#  [S14] birch plywood 18 mm, E ≈ 7,930 MPa lengthwise (spec snippet)                 [SNIPPET]
+#  [S15] EN 1995-1-1 (Eurocode 5) Table 7.1: K_ser = ρ_m^1.5·d/23 per shear plane per
+#        dowel/bolt (dlubal knowledge base); ×2 for steel-to-timber (EN 1995-1-1 §7.1(3),
+#        원문 확인 필요)                                                               [SNIPPET]
+#  [S16] daelimwood.com: CP 구조용 내수·방수 합판 18T 1220×2440 28,500원                  [SNIPPET]
+#  [S17] 합판 재단 1컷 1,000원 (국내 목재 재단 서비스 검색 요약)                           [SNIPPET]
+p("## 10. 예산 맞춤 합판 하이브리드 (Chief 요청 2026-09-28)")
+p("")
+E_PLY = 5000.0      # MPa, in-plane E of 18T structural (CP pine) plywood — ASSUMPTION (below birch 7,930 [S14])
+G_PLY = 400.0       # MPa, in-plane (panel) shear modulus — ASSUMPTION
+KAPPA = 5.0 / 6.0   # Timoshenko shear coefficient, rectangle
+T_PLY = 18.0        # mm
+RHO_PLY = {"stiff": 550.0, "mid": 500.0, "soft": 450.0}   # kg/m^3 mean density — ASSUMPTION (CP ~500)
+WOOD_FACTOR = {"stiff": 2.0, "mid": 1.0, "soft": 0.5}     # stiff: ×2 metal-to-timber [S15]; soft: workmanship/moisture — ASSUMPTION
+K_SBR16 = 20e3      # N/mm per SBR16UU open bushing block — ASSUMPTION (BOM L13 replaced MGN12 on the bed)
+K_XCELL = 50 * 9.81 / SP_DEFL   # BOM L30: 50 kg single-point bar cell mounted horizontally (Chief 절감 3), 0.3 mm @ rated — ASSUMPTION
+K_DEF = (0.8, 1.0)  # creep factor plywood, service class 1 / 2 (EN 1995-1-1 Table 3.2 — 기억 기반, 원문 확인 필요)
+SWELL_T = 0.003     # thickness swelling per 1 % moisture content change — ASSUMPTION (generic plywood)
+SWELL_L = 0.0002    # in-plane swelling per 1 % MC — ASSUMPTION
+H_OUT = 8.0         # W/m²K outer film coefficient of the holder shell — ASSUMPTION
+
+H_SBR = 45.0        # SBR16UU total height (rail base → block top) — ASSUMPTION (catalogue class)
+STACK_P = {"SBR16 rail+block": H_SBR, "bed deck 18T": 18.0, "force platform": 60.0, "holder floor": 56.0, "pan": PAN["H"]}
+H_RIM_P = sum(STACK_P.values())            # pan rim above the base-plate top
+W_PANEL = 500.0                            # side panel width along X (fits the one-sheet nesting)
+H_PANEL = H_RIM_P + Z_U                    # panel height = top cross plate level
+S_PANEL = 480.0                            # panel centre spacing (bed 400 wide + clearance)
+SPAN_PLATE = S_PANEL - T_PLY               # clear span of the cross plates
+B_PLATE = 270.0                            # cross-plate depth along X (drag direction) — design choice
+RIB_H = 90.0                               # vertical front rib under each cross plate — design choice
+WALL_BOTTOM = 60.0                         # back wall bottom above the pan rim (bed passes under)
+N_BLK_BOLTS, D_BLK_BOLT = 6, 6.0           # Z block mount (Al angle) → cross plate, per level
+N_END_BOLTS, D_END_BOLT = 4, 6.0           # H1 only: 4080 cross-beam end → panel, per end
+LOOP_JOINTS = [("KFL08 고정단 → 베이스", 4, 5.0), ("X 너트 브래킷 → 베드 데크", 4, 5.0), ("X 셀 마운트 → 베드 데크", 4, 6.0)]
+S_BLK_BED = 280.0
+
+
+def k_ser(d, lab):
+    """EN 1995-1-1 Table 7.1 [S15]: K_ser = ρ_m^1.5·d/23 [N/mm] per shear plane per bolt (snug hole)."""
+    return RHO_PLY[lab] ** 1.5 * d / 23.0 * WOOD_FACTOR[lab]
+
+
+def panel_defl(loads, W=W_PANEL, H=H_PANEL, n=4001):
+    """In-plane plywood panel as a cantilever from the base (glued foot cleats): deflection at each load
+    height by unit-load integration, bending + Timoshenko shear (numpy)."""
+    z = np.linspace(0.0, H, n)
+    EI = E_PLY * T_PLY * W ** 3 / 12.0
+    GA = KAPPA * G_PLY * T_PLY * W
+    M = sum(P * np.clip(zj - z, 0.0, None) for zj, P in loads)
+    V = sum(P * (z < zj) for zj, P in loads)
+    out = []
+    for zi, _ in loads:
+        m = np.clip(zi - z, 0.0, None)
+        v = (z < zi).astype(float)
+        out.append(float(np.trapezoid(M * m / EI, z) + np.trapezoid(V * v / GA, z)))
+    return out
+
+
+def plate_beam(R, span=SPAN_PLATE, b=B_PLATE, t=T_PLY):
+    """Cross plate lying flat, bent in its own plane by a mid-span force R (simply supported, Timoshenko)."""
+    I = t * b ** 3 / 12.0
+    return R * span ** 3 / (48 * E_PLY * I) + R * span / (4 * KAPPA * G_PLY * t * b)
+
+
+def tip_hybrid(var, F, c, jw="mid"):
+    """Drag-direction tip displacement [mm] by element. var: 'orig' (current BOM: 4080 cross-beams,
+    2040 A-frames, SBR16 bed, bar cell), 'H1' (plywood base/bed/panels/back wall, 4080 cross-beams kept),
+    'H2' (H1 + plywood cross plates; 4080 only for the Z column). Metal head joints are added separately."""
+    d = {}
+    ls = STEM + cm.Z_C_LEVER
+    d["stem"] = F * ls ** 3 / (3 * E_SS * STEM_I["30x3"])
+    ov = Z_L - (c + STEM + HEAD)
+    below = HEAD + STEM + cm.Z_C_LEVER
+    d["Z column"] = cantilever_column(F, E_AL * PROF["4080"]["I_s"], ov, below)
+    pz = c - cm.Z_C_LEVER
+    arm = Z_L - pz
+    R_u = F * arm / H_B
+    R_l = F + R_u
+
+    def two_level(dl, du_signed):
+        return dl + (dl - du_signed) / H_B * arm
+
+    d["Z guide"] = two_level(R_l / K_MGN12, -R_u / K_MGN12)
+    if var in ("orig", "H1"):
+        EI = E_AL * PROF["4080"]["I_s"]
+        span = S_CB if var == "orig" else SPAN_PLATE
+        d["cross-beams"] = two_level(R_l * span ** 3 / (48 * EI), -R_u * span ** 3 / (48 * EI))
+    else:
+        d["cross-beams"] = two_level(plate_beam(R_l), -plate_beam(R_u))
+    if var == "orig":
+        kt = tower_k("2040")
+        d["towers"] = two_level(R_l / 2 / kt, -R_u / 2 / kt)
+    else:
+        zl, zu = H_RIM_P + Z_L, H_RIM_P + Z_U
+        dl, du = panel_defl([(zl, R_l / 2), (zu, -R_u / 2)])
+        d["towers"] = two_level(dl, du)
+    d["X drive"] = F / screw_axial_k(X_SCREW_NUT_MAX)
+    h_bed = (H_RIM_P if var != "orig" else H_RIM - BED_BLOCK_Z) + pz
+    d["bed blocks"] = F * h_bed ** 2 / (2 * K_SBR16 * S_BLK_BED ** 2 / 2.0)
+    d["X cell"] = F / K_XCELL
+    wood = 0.0
+    if var != "orig":
+        wood += sum(F / (n * k_ser(dd, jw)) for _, n, dd in LOOP_JOINTS)
+        if var == "H1":
+            ke = N_END_BOLTS * k_ser(D_END_BOLT, jw)
+            wood += two_level(R_l / 2 / ke, -R_u / 2 / ke)
+        else:
+            kb = N_BLK_BOLTS * k_ser(D_BLK_BOLT, jw)
+            wood += two_level(R_l / kb, -R_u / kb)
+    d["wood joints"] = wood
+    return d
+
+
+VARS = [("orig", "원안(현재 BOM): 4080 교차빔·기둥, 2040 A-프레임, SBR16, 바형 셀"),
+        ("H1", "H1: 합판 베이스·베드·측판·뒷벽 + 4080 교차빔 유지"),
+        ("H2", "**H2(추천)**: H1 + 합판 교차판(270×18 + 앞 립), 4080은 Z 기둥만")]
+p("### 10.1 무엇을 합판으로 바꾸나")
+p("")
+table(["부위", "원안", "H2 (추천)", "나무 쪽 조건"], [
+    ["베이스", "2040 틀 1000×560", f"18T 판 1000×560 + 아래 리브 18×80×1000 ×3(접착·나사), 리브 끝 고무 패드 4", "SBR16 장착면 심 조정(§10.4)"],
+    ["베드", "2040 틀 + 2020 + 6T 데크", "18T 데크 650×400 (SBR16UU 4개 직접 볼트)", "인서트 너트, 방수 도장"],
+    ["타워", "2040 경사 다리 4 + 각도 조인트 8", f"18T **직사각 측판 {W_PANEL:.0f}×{H_PANEL:.0f} ×2**(면내 강성), 발 클리트 접착·나사", "측판이 옆 가드 겸용"],
+    ["교차빔", "4080 ×2", f"18T **교차판 {SPAN_PLATE:.0f}×{B_PLATE:.0f} ×2**(평평하게 — 굽힘 깊이를 X 방향으로) + 앞 립 18×{RIB_H:.0f}", "클리트로 측판에 **접착** + 나사"],
+    ["옆힘 격막", "2020 무릎가새 ×2", f"18T **뒷벽 {SPAN_PLATE:.0f}×{H_PANEL - H_RIM_P - WALL_BOTTOM:.0f}**(테두리 위 {WALL_BOTTOM:.0f} mm부터, 베드는 그 아래로 통과)", "접착"],
+    ["Z 블록 마운트", "4080에 T너트", f"알루미늄 앵글 40×40×4를 교차판 앞 가장자리에 M6 {N_BLK_BOLTS}개(+에폭시)", "구멍 여유 0"],
+    ["Z 기둥", "4080 500", "**4080 500 유지**(MGN12 레일 장착, 이동 부재)", "–"],
+])
+p("- 교차빔을 합판 '상자보'로 세우지 않고 **평평하게 눕힌 판**으로 한 이유: 드래그 짝힘 R_l, R_u는 **수평(X)** 이다. 굽힘 깊이가 X 방향이어야 하므로 판을 눕혀 폭 270 mm를 깊이로 쓴다. "
+  "수직 하중(Z 너트)은 앞 립이 받는다.")
+p("")
+
+p("### 10.2 스쿱 끝 X 변위 — 원안 vs 하이브리드 (C = −75)")
+p("")
+p(f"합판 E = {E_PLY:.0f} MPa, G = {G_PLY:.0f} MPa(면내, **가정**; 자작 18 mm 스니펫 7,930 MPa [S14]보다 낮게), 나무 체결 K_ser = ρ_m^1.5·d/23 [S15] "
+  f"(중간: ρ {RHO_PLY['mid']:.0f}, ×1 / 단단: ρ {RHO_PLY['stiff']:.0f}, ×2 금속–나무 / 무름: ρ {RHO_PLY['soft']:.0f}, ×0.5). 금속 체결부(헤드 브래킷·스템 클램프)는 §2.2와 같은 k_j 범위.")
+p("")
+rows = []
+hyb = {}
+for var, lab in VARS:
+    for F in (F_NOM, F_UP):
+        base = tip_hybrid(var, F, C_MIN, "mid")
+        mem = sum(v for k, v in base.items() if k != "wood joints")
+        tot = {}
+        for jw, jm in (("stiff", "stiff"), ("mid", "mid"), ("soft", "soft")):
+            dw = tip_hybrid(var, F, C_MIN, jw)["wood joints"]
+            tot[jw] = mem + dw + joint_dx(F, K_JOINT[jm])
+        hyb[(var, round(F))] = (base, mem, tot)
+        rows.append([lab if F == F_NOM else "", f"{F:.0f}", f2(mem), f2(base["wood joints"]), f2(joint_dx(F, K_JOINT["mid"])),
+                     f"**{tot['mid']:.2f}** {'●' if tot['mid'] <= 1.0 else '✘'}", f2(tot["stiff"]), f"{tot['soft']:.2f} {'●' if tot['soft'] <= 1.0 else '✘'}"])
+table(["구성", "F_x [N]", "부재·레일·구동·셀", "+ 나무 체결(중간)", "+ 금속 체결(중간)", "합계(중간)", "합계(단단)", "합계(무름)"], rows)
+b2 = hyb[("H2", round(F_UP))][0]
+table(["H2 @ F_d 요소", *b2.keys()], [["[mm]", *[f3(v) for v in b2.values()]]])
+b0 = hyb[("orig", round(F_UP))][0]
+p(f"- 측판(면내) 항 {b2['towers']:.3f} mm < 원안 2040 A-프레임 {b0['towers']:.3f} mm: 18T 판 {W_PANEL:.0f} mm 폭은 면내로 매우 강하다. "
+  f"대신 교차판 항 {b2['cross-beams']:.3f} mm(전단 변형이 대부분) > 4080 {b0['cross-beams']:.3f} mm, 나무 체결 {b2['wood joints']:.3f} mm가 새로 생긴다.")
+t2 = hyb[("H2", round(F_UP))][2]
+t2n = hyb[("H2", round(F_NOM))][2]
+p(f"- **판정**: H2는 F_d {F_UP:.0f} N에서 중간 가정 **{t2['mid']:.2f} mm ≤ 1 mm**(여유 작음), F_nom에서 {t2n['mid']:.2f} mm. 무른 가정이면 {t2['soft']:.2f} mm로 넘는다 → "
+  "§2.5 보상 조건(히스테리시스 ≤ 0.10 mm 등)을 **조립 후 측정으로 통과해야** 허용. 나무 볼트 구멍에 여유가 있으면 미끄럼이 히스테리시스로 나타나 보상 조건을 깨므로, "
+  "**구멍 = 볼트 지름(여유 0) 또는 에폭시 고정**이 전제다.")
+kb6 = N_BLK_BOLTS * k_ser(D_BLK_BOLT, "mid")
+p(f"- 여유를 늘리는 순서(비용 0에 가까움): (1) Z 블록 마운트 앵글을 에폭시 + 볼트로 붙임(볼트 {N_BLK_BOLTS}개 강성 {kb6:.0f} N/mm가 이 항을 정함), "
+  "(2) 교차판·측판·뒷벽을 모두 접착(나사만이면 이음 미끄럼 항이 추가됨), (3) 헤드 브래킷 볼트 추가(§2.2 금속 항).")
+p("")
+
+p("### 10.3 옆힘(F_y)과 수직(깊이) — 나무 구조에서 새로 확인할 것")
+p("")
+Fy = K_SIDE * F_UP
+h_low = H_RIM_P + WALL_BOTTOM
+I_out = W_PANEL * T_PLY ** 3 / 12.0
+k_sway_pin = 2 * 3 * E_PLY * I_out / h_low ** 3
+k_sway_fix = 2 * 12 * E_PLY * I_out / h_low ** 3
+k_sway_nowall = 2 * 3 * E_PLY * I_out / H_PANEL ** 3
+side_core = side_LA(CAND["L-A"], Fy, C_MIN) - Fy / (2 * E_AL * PROF["2020"]["A"] * (140.0 / math.hypot(140.0, 235.0)) ** 2 / math.hypot(140.0, 235.0))
+# vertical: upper cross plate + front rib (L-section) under the Z nut
+A_f, A_w = B_PLATE * T_PLY, T_PLY * RIB_H
+y_f, y_w = T_PLY / 2, T_PLY + RIB_H / 2
+y_c = (A_f * y_f + A_w * y_w) / (A_f + A_w)
+I_L = B_PLATE * T_PLY ** 3 / 12 + A_f * (y_c - y_f) ** 2 + T_PLY * RIB_H ** 3 / 12 + A_w * (y_w - y_c) ** 2
+I_flat = B_PLATE * T_PLY ** 3 / 12
+Fz = K_VERT * F_UP
+
+
+def ss_mid(P, L, EI):
+    return P * L ** 3 / (48 * EI)
+
+
+d_nut_rib, d_nut_flat = ss_mid(Fz, SPAN_PLATE, E_PLY * I_L), ss_mid(Fz, SPAN_PLATE, E_PLY * I_flat)
+d_dead_rib = ss_mid(W_Z, SPAN_PLATE, E_PLY * I_L)
+# base plate + 3 ribs (π-section) sag under the bed at mid-span, supported on pads at the rib ends
+BW, RIB, NRIB, L_PAD = 560.0, 80.0, 3, 900.0
+A_p, A_r = BW * T_PLY, NRIB * T_PLY * RIB
+y_p, y_r = T_PLY / 2, T_PLY + RIB / 2
+y_b = (A_p * y_p + A_r * y_r) / (A_p + A_r)
+I_base = BW * T_PLY ** 3 / 12 + A_p * (y_b - y_p) ** 2 + NRIB * T_PLY * RIB ** 3 / 12 + A_r * (y_r - y_b) ** 2
+I_base0 = BW * T_PLY ** 3 / 12
+W_bed = M_BED * 9.81
+sag_rib, sag_flat = ss_mid(W_bed, L_PAD, E_PLY * I_base), ss_mid(W_bed, L_PAD, E_PLY * I_base0)
+dsag_ice = ss_mid(M_ICE * 9.81, L_PAD, E_PLY * I_base)
+# bed deck under F_z between blocks (strip 400 wide, span 300)
+d_deck = ss_mid(Fz, 300.0, E_PLY * 400.0 * T_PLY ** 3 / 12)
+table(["항목", "값", "식·비고"], [
+    [f"옆 변위 @ F_y {Fy:.0f} N: 기둥·스템·Z 가이드", f"{side_core:.2f} mm", "§2.3과 같은 식"],
+    ["  + 측판 흔들림(뒷벽 격막 있음, 발 핀/고정)", f"{Fy/k_sway_pin:.2f} / {Fy/k_sway_fix:.2f} mm", f"측판 면외 k = 2·c·E·I/h³, h = 테두리+{WALL_BOTTOM:.0f} = {h_low:.0f} mm, c = 3 / 12"],
+    ["  (참고) 뒷벽 없이", f"{Fy/k_sway_nowall:.1f} mm", f"h = {H_PANEL:.0f} mm 외팔 → **뒷벽 필수**"],
+    [f"Z 너트 수직(F_z {Fz:.0f} N): 교차판 + 앞 립", f"{d_nut_rib:.3f} mm", f"L자 단면 I = {I_L:.3g} mm⁴. 립 없으면 {d_nut_flat:.2f} mm → **앞 립 필수**"],
+    [f"  자중(W_z {W_Z:.0f} N) 처짐의 크리프", f"{d_dead_rib*1e3:.1f} → {d_dead_rib*(1+K_DEF[0])*1e3:.1f}–{d_dead_rib*(1+K_DEF[1])*1e3:.1f} µm", "u_fin = u_inst·(1 + k_def), k_def 0.8–1.0(확인 필요). 매 스트로크 터치오프가 흡수"],
+    [f"베이스 처짐(베드 {M_BED:.1f} kg 가운데, 패드 간격 {L_PAD:.0f})", f"{sag_rib:.3f} mm (리브 3) / {sag_flat:.2f} mm (판만)", f"**리브 필수**. 아이스크림 {M_ICE:.1f} kg 소진에 따른 변화 {dsag_ice:.3f} mm"],
+    [f"베드 데크 처짐(F_z {Fz:.0f} N, 블록 사이 300)", f"{d_deck:.3f} mm", "F_z 측정값으로 보상 가능"],
+])
+T_AIR, RH = 22.0, 0.5
+g = math.log(RH) + 17.62 * T_AIR / (243.12 + T_AIR)
+T_DEW = 243.12 * g / (17.62 - g)                     # Magnus formula
+U = 1.0 / (0.05 / 0.034 + 1.0 / H_OUT)
+T_SHELL = T_AIR - U * (T_AIR - (-14.0)) / H_OUT
+p("### 10.4 나무 위험과 대책")
+p("")
+table(["위험", "계산·근거", "대책"], [
+    ["**결로·물방울**", f"실내 {T_AIR:.0f} °C / RH {RH*100:.0f} %의 이슬점 {T_DEW:.1f} °C (Magnus 식). 단열 홀더 외피 표면 ≈ {T_SHELL:.1f} °C → 외피는 결로 없음. "
+     "**−14 °C 팬 테두리·뚜껑 안쪽·스쿱·스템·push-rod**는 이슬점 아래 → 성에·물방울이 베드 데크와 베이스 위로 떨어짐",
+     "전 합판 수성 우레탄 2회(마구리 먼저, BOM L90), 홀더·컵 주변 데크에 물받이(알루미늄 테이프·PET 판), 시험 후 닦고 건조, 기계를 냉동고 옆 습한 곳에 두지 않음"],
+    ["습기 팽창", f"함수율 3 %p 변화 가정: 두께 {18*SWELL_T*3:.2f} mm, 길이 1 m당 {1000*SWELL_L*3:.1f} mm (일반 계수 가정)",
+     "고르게 부풀면 터치오프가 흡수. 국부 젖음(물방울)은 레일 높이를 바꾼다 → 도장·물받이, 계절마다 베드 높이 지도 재측정"],
+    ["크리프", f"k_def 0.8–1.0(합판, 사용등급 1–2, 확인 필요): 자중 처짐 ×1.8–2.0", "드래그 하중은 수 초라 크리프 무관. 자중 처짐은 터치오프로 흡수. 장기 보관 시 베드를 가운데 두지 않음"],
+    ["체결부 무름·미끄럼", f"K_ser(M6, 중간) = {k_ser(6, 'mid'):.0f} N/mm/볼트 — 금속–금속보다 무름. 구멍 여유는 그대로 미끄럼(EN 1995 볼트 구멍 여유 허용)",
+     "구멍 = 볼트 지름(여유 0), 인서트 너트, 금속–나무는 에폭시 + 볼트, 나무–나무는 본드 + 나사"],
+    ["평탄도(SBR16 장착면)", "구조용 합판은 휨·뒤틀림이 있음(수치 미확인). 레일은 지지형이라 면을 그대로 따름 → 베드 높이가 X에 따라 변하면 드래그 중 깊이가 변함",
+     "베이스에 리브 접착 후 장착. 브리지에 다이얼 게이지를 달고 베드를 움직이며 **베드 상면 높이 흔들림 ≤ 0.1 mm**가 되게 SBR16 받침(150 mm 간격)에 심. 남는 값은 X–Z 지도로 G-code 보정(정적·반복 가능)"],
+])
+
+p("### 10.5 예산 — BOM 반영 결과 (`elec/v1l_bom.csv`, `mech/v1l_bom_plywood_update.py`)")
+p("")
+BOM_CSV = os.path.abspath(os.path.join(HERE, "..", "elec", "v1l_bom.csv"))
+if os.path.exists(BOM_CSV):
+    import csv as _csv
+    with open(BOM_CSV, encoding="utf-8", newline="") as fh:
+        bom = list(_csv.reader(fh))[1:]
+    fr = [r for r in bom if r[1] == "Frame" and int(r[7] or 0) > 0]
+    table(["ID", "품목", "수량", "합계 [원]", "가격 상태"], [[r[0], r[2], r[4], f"{int(r[7]):,}", r[10]] for r in fr] +
+          [["", "**프레임 소계**", "", f"**{sum(int(r[7]) for r in fr):,}**", "원안 227,452"]] +
+          [[r[0], r[2], r[4], f"{int(r[7]):,}", r[10]] for r in bom if r[0] in ("L63", "L64")])
+    sums = {r[0]: int(r[7]) for r in bom if r[0].startswith("SUM")}
+    table(["합계 행", "금액 [원]", "비고"], [[k, f"{v:,}", next(r[14] for r in bom if r[0] == k)] for k, v in sums.items()])
+else:
+    p("(BOM 파일 없음)")
+
+p("### 10.6 합판 1장 재단도 (1220 × 2440, 톱날 3 mm)")
+p("")
+KERF = 3.0
+BANDS = [  # (band length along the sheet, [(piece, width, length, qty)])
+    (2 * W_PANEL + KERF, [("측판", H_PANEL, W_PANEL, 2), ("베이스 리브(옆 띠 281 폭)", 80.0, 1000.0, 3)]),
+    (560.0, [("베이스 판", 1000.0, 560.0, 1), ("발 클리트(옆 띠)", 60.0, 560.0, 3)]),
+    (H_PANEL - H_RIM_P - WALL_BOTTOM, [("뒷벽", SPAN_PLATE, H_PANEL - H_RIM_P - WALL_BOTTOM, 1), ("베드 데크", 650.0, 400.0, 1),
+                                       ("앞 립(데크 아래 650×180)", SPAN_PLATE, RIB_H, 2), ("발 클리트(오른쪽 띠 108)", 60.0, 580.0, 1)]),
+    (B_PLATE, [("교차판", SPAN_PLATE, B_PLATE, 2), ("교차판 클리트(옆 296×270)", 60.0, B_PLATE, 4)]),
+]
+used_L = sum(b[0] for b in BANDS) + KERF * (len(BANDS) - 1)
+assert used_L <= 2440.0, "plywood nesting does not fit one sheet"
+assert 1000.0 <= 2 * W_PANEL + KERF and H_PANEL + KERF + 3 * 80.0 + 2 * KERF <= 1220.0
+assert SPAN_PLATE + KERF + 650.0 + KERF + 60.0 <= 1220.0 and 2 * SPAN_PLATE + KERF + 4 * 60.0 + 3 * KERF <= 1220.0
+rows = []
+area = 0.0
+for L, pcs in BANDS:
+    for name, w, l, q in pcs:
+        rows.append([f"{L:.0f}", name, f"{w:.0f} × {l:.0f}", q])
+        area += w * l * q / 1e6
+table(["띠 길이 [mm]", "부품", "치수 [mm]", "개수"], rows)
+p(f"- 띠 길이 합 {used_L:.0f} ≤ 2440 mm, 부품 면적 {area:.2f} m² / 판 2.98 m² ({area/2.977*100:.0f} %). **재단 실수 여유가 거의 없다** → 판매처 패널쏘 재단(직선 16컷, BOM L87). "
+  "X 스톱 블록·팬 턱 받침은 자투리(데크 아래 188×180, 리브 옆 35×1000)와 6T(L08)로.")
+p("- 측판이 옆 가드를 겸한다: 브리지 구간(X ±250) 옆은 18T 판이 막고, 베드–측판 틈은 "
+  f"{(S_PANEL - T_PLY) / 2 - 200:.0f} mm. 정면은 아크릴 창 {SPAN_PLATE:.0f}×{H_PANEL - H_RIM_P - WALL_BOTTOM:.0f}(경첩) 1장 → 가드 아크릴 900×600 2장 → 1장.")
+p("")
+
 with open(OUT, "w", encoding="utf-8") as fh:
     fh.write("\n".join(lines) + "\n")
 print("\n".join(lines))
