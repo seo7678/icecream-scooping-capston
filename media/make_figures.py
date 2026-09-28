@@ -997,11 +997,12 @@ def fig_alternatives():
 # =====================================================================================
 # Fig 9 — V1-L budget rig (<= 1,000,000 KRW): moving bed + fixed bridge
 # =====================================================================================
-V1L_FRAME = "plywood"      # base, towers, bed deck: "plywood" (18T, default) or "profile" (2040 aluminium)
+V1L_FRAME = "plywood"      # "plywood": H2 plywood hybrid (default, mech §13) / "profile": 2040 A-frame (mech §2)
 
 
 def fig_v1l(frame=None):
     FRAME = frame or V1L_FRAME
+    ply = FRAME == "plywood"
     # callouts / legend (title, description) — numbered 1..14 in this order
     items = [
         ("베이스 프레임", "2040 1000×560, 조절 발 4"),
@@ -1019,16 +1020,16 @@ def fig_v1l(frame=None):
         ("hold-to-run 발판", "누르고 있을 때만 동작"),
         ("아크릴 옆판", "완전 인클로저 아님, 작업자 입회 시험"),
     ]
-    if FRAME == "plywood":
-        items[0] = ("베이스", "18T 합판(방수 도장)")
-        items[2] = ("고정 브리지", "4080 교차빔 2개(간격 220) + 합판 삼각 타워")
+    if ply:
+        items[0] = ("베이스", "18T 내수 합판 + 리브 3개(우레탄 도장)")
+        items[1] = ("X 이동 베드  [X]", "18T 데크 + SBR16 레일 + TR8 리드 4 + NEMA17, 행정 ~466 mm")
+        items[2] = ("고정 브리지", "18T 측판 2장 + 교차판 2장(수평) + 뒷벽")
+        items[13] = ("정면 아크릴 창", "측판이 옆 가드를 겸함, 작업자 입회 시험")
     title = "V1-L — 예산 100만 원 안에서 만드는 시제품"
     subtitle = ("팬이 움직이고 헤드는 Z·θ만: 이동 베드 + 고정 브리지. 볼스크류 모듈·폐루프 모터·자동 Y·인클로저를 빼고 "
                 "리드스크류·스테퍼·수동 레인으로. 가격·하중은 추정·가정값")
     legend_head = "V1-L 구성 (예산 100만 원 이하)"
-
     C_PLY, C_PLY_E = "#D9B98A", "#8C6A3C"
-    ply = FRAME == "plywood"
 
     fig = plt.figure(figsize=(15, 8.6))
     ax = fig.add_axes([0.0, 0.0, 0.64, 0.91])
@@ -1036,25 +1037,31 @@ def fig_v1l(frame=None):
     ax.axis("off")
     A = m3.Axo(26.0, 20.0)
 
-    # ---- geometry (mm, pan rim z = 0, X = drag / bed direction; values from _chief/work/mech/v1l_mech.md §2)
-    FLOOR, BENCH = -1000.0, -380.0             # bench top lowered so the base top sits 315 below the pan rim
-    BASE_TOP = -315.0                           # tower top 955 above the base = z_u 640
-    BX0, BX1, BY = -500.0, 500.0, 280.0         # base 1000 x 560
-    XB = -30.0                                  # bridge (tower apex / beam) centre X
-    Z_L, Z_U = 420.0, 640.0                     # 4080 cross-beam centre heights, 80 face along X
-    TY = 240.0                                  # towers at y = +-240
+    # ---- geometry (mm, pan rim z = 0, X = drag / bed direction, +X = front of the bridge; _chief/work/mech/v1l_mech.md)
+    FLOOR = -1000.0
+    Z_L, Z_U = 420.0, 640.0                     # lower / upper cross member level
+    TY = 240.0                                  # side plates / towers at y = +-240
     X, Z, TH = 70.0, -20.0, -30.0               # scoop pivot C (column centre), attack pose
+    BX0, BX1, BY = -500.0, 500.0, 280.0         # base 1000 x 560
+    RAIL_X = (-350.0, 450.0)
+    if ply:                                     # H2 (§13.2): rim 299 above the base top
+        BASE_TOP, BENCH = -299.0, -407.0        # board 18T on ribs 80 + rubber pads 10
+        XB = X - 125.0                          # bridge centre: column 25 in front of the cross-plate front edge
+        XF = XB + 60.0                          # cross-plate front (+X) edge
+        DECK = (-254.0, -236.0)                 # 18T deck on SBR16UU (45 above the base)
+        DECK_Y = 200.0                          # 650 x 400 -> 31 mm gap to the side plates
+    else:                                       # §2 sketch: tower top 955 above the base = z_u 640
+        BASE_TOP, BENCH = -315.0, -380.0
+        XB = -30.0
+        DECK = (-282.0, -276.0)                 # 6T deck on a 2040 bed frame
+        DECK_Y = 220.0
     B0 = X - 200.0                              # bed origin: lane start (local 110) + 90 under the head
     HX0, HX1, HW = B0 + 5, B0 + 485, 142.5      # insulated holder 480 x 285
     PX0, PX1, PW = B0 + 65, B0 + 425, 82.5      # gelato pan 360 x 165 (half width)
     LX0, LX1 = B0 + 110, B0 + 380               # lanes, 270 mm
     CUPX = B0 + 576                             # cup centre: 466 from the lane start
-    RAIL_X = (-350.0, 450.0)
-    if ply:
-        DECK = (-302.0, -284.0)                 # 18T plywood deck on the blocks
-    else:
-        DECK = (-282.0, -276.0)                 # 6T deck on a 2040 bed frame
     PLAT_TOP = -176.0                           # holder bottom (XPS 50 + ply 6 below the pan floor)
+    PLAT_Y = DECK_Y - 2 if ply else 215.0
     COL = (X - 40, X + 40, -20.0, 20.0, Z + 300, Z + 800)     # 4080 Z column, 500 long
 
     def shade(n):
@@ -1092,26 +1099,21 @@ def fig_v1l(frame=None):
         nx, nz = -(z1 - z0) / L * w / 2, (x1 - x0) / L * w / 2
         slab([(x0 + nx, z0 + nz), (x1 + nx, z1 + nz), (x1 - nx, z1 - nz), (x0 - nx, z0 - nz)], "xz", y0, y1, color, **kw)
 
-    def tower(ys, alpha=1.0):
-        y0, y1 = (ys * TY - 9, ys * TY + 9) if ply else (ys * TY - 10, ys * TY + 10)
-        if ply:
-            slab([(XB - 450, BASE_TOP), (XB + 450, BASE_TOP), (XB + 18, Z_U + 20), (XB - 18, Z_U + 20)], "xz", y0, y1,
-                 C_PLY, ec=C_PLY_E, lw=0.7, alpha=alpha)
-        else:
-            for s in (-1, 1):
-                bar_xz((XB + s * 450, BASE_TOP), (XB + s * 12, Z_U + 20), 40, y0, y1, m.C_ALU)
-            hw = 450 * (Z_U - Z_L) / (Z_U - BASE_TOP) + 20
-            A.box(XB - hw, XB + hw, y0, y1, Z_L - 20, Z_L + 20, m.C_ALU)                  # horizontal tie at z_l
-            A.box(XB - 10, XB + 10, y0, y1, Z_L + 20, Z_U - 20, m.C_ALU)                  # post tie -> apex
-        # 2020 knee brace between the tower and the lower cross beam (side force): under the beam on the
-        # plywood plate (as in the mech sketch), above it on the profile post (no member below z_l there)
-        if ply:
-            kb = [(ys * (TY - 10), Z_L - 150), (ys * (TY - 10), Z_L - 122), (ys * (TY - 122), Z_L - 20),
-                  (ys * (TY - 150), Z_L - 20)]
-        else:
-            kb = [(ys * (TY - 12), Z_L + 150), (ys * (TY - 12) - ys * 8, Z_L + 162), (ys * (TY - 130), Z_L + 28),
-                  (ys * (TY - 118), Z_L + 16)]
-        slab(kb, "yz", XB - 10, XB + 10, m.C_ALU)
+    def side_plate(ys, alpha=1.0):
+        """H2: rectangular 18T side plate 500 (X) x 939 (Z) = tower + side guard."""
+        A.box(XB - 250, XB + 250, ys * TY - 9, ys * TY + 9, BASE_TOP, BASE_TOP + 939, C_PLY, ec=C_PLY_E, lw=0.7,
+              alpha=alpha)
+
+    def a_frame(ys):
+        """Profile variant: 2040 A-frame tower with tie at z_l, post and a 2020 knee brace to the lower beam."""
+        y0, y1 = ys * TY - 10, ys * TY + 10
+        for s in (-1, 1):
+            bar_xz((XB + s * 450, BASE_TOP), (XB + s * 12, Z_U + 20), 40, y0, y1, m.C_ALU)
+        hw = 450 * (Z_U - Z_L) / (Z_U - BASE_TOP) + 20
+        A.box(XB - hw, XB + hw, y0, y1, Z_L - 20, Z_L + 20, m.C_ALU)                      # horizontal tie at z_l
+        A.box(XB - 10, XB + 10, y0, y1, Z_L + 20, Z_U - 20, m.C_ALU)                      # post tie -> apex
+        slab([(ys * (TY - 12), Z_L + 150), (ys * (TY - 12) - ys * 8, Z_L + 162), (ys * (TY - 130), Z_L + 28),
+              (ys * (TY - 118), Z_L + 16)], "yz", XB - 10, XB + 10, m.C_ALU)
 
     # ---- floor, bench, foot switch
     FL = [(-650, -560, FLOOR), (650, -560, FLOOR), (650, 400, FLOOR), (-650, 400, FLOOR)]
@@ -1124,55 +1126,77 @@ def fig_v1l(frame=None):
     A.box(-70, 90, -532, -432, FLOOR + 38, FLOOR + 48, "#4A5866", ec="#111", lw=0.4)
     A.draw(ax, A.flush(), 1)
 
-    # ---- acrylic side panel at +Y (behind everything)
-    back = A.pts([(XB - 450, BY + 10, BASE_TOP), (XB + 450, BY + 10, BASE_TOP), (XB + 450, BY + 10, 560),
-                  (XB - 450, BY + 10, 560)])
-    ax.add_patch(Polygon(back, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.8, alpha=0.08, zorder=1.5))
+    if not ply:                                                                              # acrylic side panel at +Y
+        back = A.pts([(XB - 450, BY + 10, BASE_TOP), (XB + 450, BY + 10, BASE_TOP), (XB + 450, BY + 10, 560),
+                      (XB - 450, BY + 10, 560)])
+        ax.add_patch(Polygon(back, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.8, alpha=0.08, zorder=1.5))
 
-    # ---- base, feet, rails, X screw + motor, control box, back tower
-    for fx in (BX0 + 20, BX1 - 60):
-        for fy in (-BY + 20, BY - 60):
-            A.box(fx, fx + 40, fy, fy + 40, BENCH, BASE_TOP - 20, "#4A5866", ec="#222")      # levelling feet
+    # ---- base (first: its large top face must not sort over the parts on it)
     if ply:
+        for yr in (-190.0, 0.0, 190.0):                                                      # ribs 18 x 80 x 1000
+            A.box(BX0, BX1, yr - 9, yr + 9, BASE_TOP - 98, BASE_TOP - 18, "#BF9C68", ec=C_PLY_E, lw=0.5)
+            for x0 in (BX0 + 5, BX1 - 55):                                                   # rubber pads
+                A.box(x0, x0 + 50, yr - 14, yr + 14, BENCH, BASE_TOP - 98, "#2B2F33", ec="#111", lw=0.3)
+        A.draw(ax, A.flush(), 1.85)
         A.box(BX0, BX1, -BY, BY, BASE_TOP - 18, BASE_TOP, C_PLY, ec=C_PLY_E, lw=0.7)
     else:
+        for fx in (BX0 + 20, BX1 - 60):
+            for fy in (-BY + 20, BY - 60):
+                A.box(fx, fx + 40, fy, fy + 40, BENCH, BASE_TOP - 20, "#4A5866", ec="#222")  # levelling feet
         for y0 in (-BY, BY - 40, -160, 120):
             A.box(BX0, BX1, y0, y0 + 40, BASE_TOP - 20, BASE_TOP, m.C_ALU)
         for x0 in (BX0, BX1 - 40, -350):
             A.box(x0, x0 + 40 if x0 != -350 else -330, -BY + 40, BY - 40, BASE_TOP - 20, BASE_TOP, m.C_ALU)
-    A.draw(ax, A.flush(), 1.9)                  # base first: its large top face must not sort over the parts on it
+    A.draw(ax, A.flush(), 1.9)
+
+    # ---- rails, X screw + motor, control box, back tower / far side plate + rear wall
     for yr in (-140.0, 140.0):
-        A.box(*RAIL_X, yr - 6, yr + 6, BASE_TOP, BASE_TOP + 8, "#44505b", lw=0.3)            # linear rails
-    A.box(-250, 350, -4, 4, -299, -291, "#8C96A0", lw=0.2)                                   # TR8 lead 4 x 600
-    A.box(-266, -250, -22, 22, BASE_TOP, -273, "#26313D")                                    # KFL08 (fixed end)
-    A.box(350, 362, -18, 18, BASE_TOP, -277, "#26313D")                                      # far support
-    A.box(-330, -282, -21, 21, BASE_TOP, -273, "#2E3A46")                                    # X NEMA17
+        if ply:                                                                              # SBR16: support + round bar
+            A.box(*RAIL_X, yr - 17, yr + 17, BASE_TOP, BASE_TOP + 17, m.C_ALU, lw=0.3)
+            A.box(*RAIL_X, yr - 8, yr + 8, BASE_TOP + 17, BASE_TOP + 33, "#C9CED4", ec="#7a858f", lw=0.3)
+        else:
+            A.box(*RAIL_X, yr - 6, yr + 6, BASE_TOP, BASE_TOP + 8, "#44505b", lw=0.3)        # MGN12 rails
+    A.box(-250, 350, -4, 4, BASE_TOP + 16, BASE_TOP + 24, "#8C96A0", lw=0.2)                 # TR8 lead 4 x 600
+    A.box(-266, -250, -22, 22, BASE_TOP, BASE_TOP + 42, "#26313D")                           # KFL08 (fixed end)
+    A.box(350, 362, -18, 18, BASE_TOP, BASE_TOP + 38, "#26313D")                             # far support
+    A.box(-330, -282, -21, 21, BASE_TOP, BASE_TOP + 42, "#2E3A46")                           # X NEMA17
     A.box(-485, -365, 95, 215, BASE_TOP, BASE_TOP + 70, "#34414E", ec="#161d24")             # control box
     A.box(-470, -440, 95, 99, BASE_TOP + 44, BASE_TOP + 56, "#4CAF50", ec="none")           # status LED strip
-    tower(+1)
+    if ply:
+        side_plate(+1)
+        A.box(XF - 288, XF - 270, -TY + 9, TY - 9, 60, Z_U, C_PLY, ec=C_PLY_E, lw=0.7)      # rear wall 462 x 580
+    else:
+        a_frame(+1)
     A.draw(ax, A.flush(), 2)
+    if ply:                                                                                  # highlight on the round bars
+        for yr in (-140.0, 140.0):
+            q = A.pts([(RAIL_X[0], yr - 3, BASE_TOP + 33), (RAIL_X[1], yr - 3, BASE_TOP + 33)])
+            ax.plot(q[:, 0], q[:, 1], color="white", lw=0.6, alpha=0.9, zorder=2.05)
 
     # ---- X bed (moving), force platform, insulated holder, pan, index pins, cup holder
     for yr in (-140.0, 140.0):
         for bx in (185.0, 465.0):
-            A.box(B0 + bx - 22, B0 + bx + 22, yr - 13, yr + 13, BASE_TOP + 4, DECK[0], m.C_X, ec="#1E4E80")
+            b_z0 = BASE_TOP + 22 if ply else BASE_TOP + 4                                     # SBR16UU / MGN12H
+            A.box(B0 + bx - 22, B0 + bx + 22, yr - 22 if ply else yr - 13, yr + 22 if ply else yr + 13, b_z0,
+                  DECK[0], m.C_X, ec="#1E4E80")
     if not ply:
         for yr in (-140.0, 140.0):
             A.box(B0, B0 + 650, yr - 20, yr + 20, DECK[0] - 20, DECK[0], m.C_X, ec="#1E4E80")
     A.draw(ax, A.flush(), 2.9)
-    if ply:
-        A.box(B0, B0 + 650, -220, 220, *DECK, C_PLY, ec=m.C_X, lw=0.9)
-    else:
-        A.box(B0, B0 + 650, -220, 220, *DECK, "#D6E4F3", ec=m.C_X, lw=0.9)
+    A.box(B0, B0 + 650, -DECK_Y, DECK_Y, *DECK, C_PLY if ply else "#D6E4F3", ec=m.C_X, lw=0.9)
     A.draw(ax, A.flush(), 3.0)
     d1 = DECK[1]
-    A.box(B0 + 20, B0 + 470, -200, 200, d1, d1 + 10, "#F1C4C6", ec=m.C_SENSOR)              # platform base plate
-    A.box(B0 + 90, B0 + 330, -22, 22, d1 + 10, d1 + 42, m.C_SENSOR, ec="#8a1f23")           # bar cell, vertical
-    A.box(B0 + 380, B0 + 420, -110, 110, d1 + 16, PLAT_TOP - 30, m.C_SENSOR, ec="#8a1f23")  # bar cell, X (upright)
-    A.box(B0 + 60, B0 + 64, -150, 150, d1 + 42, PLAT_TOP - 14, "#B7BEC5", ec="#6d7780", lw=0.3)  # leaf-spring flexures
-    A.box(B0 + 440, B0 + 444, -150, 150, d1 + 10, PLAT_TOP - 14, "#B7BEC5", ec="#6d7780", lw=0.3)
+    if ply:     # 60 mm stack: base plate, bar cell (vertical), bar cell (X, upright), flexures, top plate
+        cz = (d1 + 8, d1 + 28, d1 + 8, PLAT_TOP - 12)
+    else:
+        cz = (d1 + 10, d1 + 42, d1 + 16, PLAT_TOP - 30)
+    A.box(B0 + 20, B0 + 470, -PLAT_Y + 15, PLAT_Y - 15, d1, cz[0], "#F1C4C6", ec=m.C_SENSOR)   # platform base plate
+    A.box(B0 + 90, B0 + 330, -22, 22, cz[0], cz[1], m.C_SENSOR, ec="#8a1f23")                # bar cell, vertical
+    A.box(B0 + 380, B0 + 420, -110, 110, cz[2], cz[3], m.C_SENSOR, ec="#8a1f23")             # bar cell, X
+    A.box(B0 + 60, B0 + 64, -150, 150, cz[1], PLAT_TOP - 14, "#B7BEC5", ec="#6d7780", lw=0.3)  # leaf-spring flexures
+    A.box(B0 + 440, B0 + 444, -150, 150, cz[0], PLAT_TOP - 14, "#B7BEC5", ec="#6d7780", lw=0.3)
     A.draw(ax, A.flush(), 3.05)
-    A.box(B0, B0 + 490, -215, 215, PLAT_TOP - 14, PLAT_TOP, "#F1C4C6", ec=m.C_SENSOR)      # platform top plate
+    A.box(B0, B0 + 490, -PLAT_Y, PLAT_Y, PLAT_TOP - 14, PLAT_TOP, "#F1C4C6", ec=m.C_SENSOR)  # platform top plate
     A.draw(ax, A.flush(), 3.1)
     for xp in (HX0 + 30, HX1 - 30):                                                          # index holes (other lanes)
         for dy in (-38.0, 38.0):
@@ -1199,17 +1223,32 @@ def fig_v1l(frame=None):
     ax.add_patch(Polygon(A.rim_ellipse(CUPX, 0, -5, 46), closed=True, fc="#c9d1d8", ec="#8E9AA5", lw=0.9, zorder=3.4))
     ax.add_patch(Polygon(A.rim_ellipse(CUPX, 0, 0, 40), closed=True, fc="white", ec="#8E9AA5", lw=0.9, zorder=3.45))
 
-    # ---- fixed bridge: two 4080 cross beams (80 along X), then the Z column in front (+X) of them
-    for zc in (Z_L, Z_U):
-        A.box(XB - 40, XB + 40, -TY - 10, TY + 10, zc - 20, zc + 20, m.C_ALU)
-    A.draw(ax, A.flush(), 4)
+    # ---- fixed bridge members behind the Z column, then the column (it sits in front, +X, of them)
+    if ply:
+        for zt in (Z_L, Z_U):                                     # cross plate 462 x 270 + front lip 462 x 90, 18T
+            A.box(XF - 270, XF - 18, -TY + 9, TY - 9, zt - 18, zt, C_PLY, ec=C_PLY_E, lw=0.6)
+            A.box(XF - 18, XF, -TY + 9, TY - 9, zt - 90, zt, C_PLY, ec=C_PLY_E, lw=0.6)
+        A.draw(ax, A.flush(), 4)
+        for zt in (Z_L, Z_U):                                     # Al angle 40x40x4 + Z block (MGN12H)
+            A.box(XF - 36, XF, -90, 90, zt, zt + 4, "#AEB7BF", ec="#6d7780", lw=0.4)
+            A.box(XF, XF + 4, -90, 90, zt - 40, zt + 4, "#AEB7BF", ec="#6d7780", lw=0.4)
+            A.box(XF + 4, XF + 17, -13.5, 13.5, zt - 40, zt + 5, "#26313D", lw=0.3)
+        A.draw(ax, A.flush(), 4.05)
+    else:
+        for zc in (Z_L, Z_U):                                     # 4080 cross beams, 80 face along X
+            A.box(XB - 40, XB + 40, -TY - 10, TY + 10, zc - 20, zc + 20, m.C_ALU)
+        A.draw(ax, A.flush(), 4)
     A.box(*COL, m.C_Z_L, ec=m.C_Z)                                                           # 4080 Z column (moves)
     A.draw(ax, A.flush(), 4.1)
     A.box(COL[0], COL[1], -60, 20, COL[5], COL[5] + 8, "#8C96A0")                            # motor plate
     A.box(X - 21, X + 21, -56, -14, COL[5] + 8, COL[5] + 56, "#2E3A46")                      # Z NEMA17
     A.box(X - 4, X + 4, -39, -31, COL[5] - 300, COL[5], "#8C96A0", lw=0.2)                   # TR8 lead 2 x 300
-    A.box(XB + 40, X + 10, -47, -23, Z_U - 12, Z_U + 12, "#8C96A0")                          # nut bracket on z_u beam
-    A.box(X - 9, X + 9, -44, -26, Z_U - 16, Z_U + 16, "#C9A227", ec="#7a5f10")               # brass nut
+    if ply:
+        A.box(XF - 36, X + 10, -47, -23, Z_U + 4, Z_U + 14, "#AEB7BF", ec="#6d7780", lw=0.4)  # nut angle on z_u plate
+        A.box(X - 9, X + 9, -44, -26, Z_U + 14, Z_U + 40, "#C9A227", ec="#7a5f10")          # brass nut
+    else:
+        A.box(XB + 40, X + 10, -47, -23, Z_U - 12, Z_U + 12, "#8C96A0")                      # nut bracket on z_u beam
+        A.box(X - 9, X + 9, -44, -26, Z_U - 16, Z_U + 16, "#C9A227", ec="#7a5f10")           # brass nut
     A.draw(ax, A.flush(), 4.2)
 
     # ---- head: theta stepper + 1:27, drip umbrella, stem, dual push-rods, scoop
@@ -1224,21 +1263,31 @@ def fig_v1l(frame=None):
     A.draw(ax, A.flush(), 5)
     m3.draw_scoop3d(ax, A, X, 0.0, Z, TH, zorder=6)
 
-    # ---- front tower (y = -240) + safety parts in front
-    tower(-1, alpha=0.28 if ply else 1.0)
-    A.draw(ax, A.flush(), 6.6)
-    if ply:                                                                                  # outline of the see-through plate
-        q = A.pts([(XB - 450, -TY - 9, BASE_TOP), (XB + 450, -TY - 9, BASE_TOP), (XB + 18, -TY - 9, Z_U + 20),
-                   (XB - 18, -TY - 9, Z_U + 20)])
-        ax.add_patch(Polygon(q, closed=True, fc="none", ec=C_PLY_E, lw=1.0, zorder=6.7))
+    # ---- near side plate / front tower (y = -240), guards, E-stop
+    if ply:
+        side_plate(-1, alpha=0.2)
+        A.draw(ax, A.flush(), 6.6)
+        q = A.pts([(XB - 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP + 939),
+                   (XB - 250, -TY - 9, BASE_TOP + 939)])
+        ax.add_patch(Polygon(q, closed=True, fc="none", ec=C_PLY_E, lw=0.8, alpha=0.75, zorder=6.7))  # see-through outline
+        win = A.pts([(XB + 250, -TY + 9, 60), (XB + 250, TY - 9, 60), (XB + 250, TY - 9, Z_U), (XB + 250, -TY + 9, Z_U)])
+        ax.add_patch(Polygon(win, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.9, alpha=0.1, zorder=8))
+        ax.add_patch(Polygon(win, closed=True, fc="none", ec="#7FA3C6", lw=0.9, zorder=8.05))
+        for zh in (220.0, 450.0):                                                            # hinges on the far edge
+            A.box(XB + 250, XB + 258, TY - 30, TY - 9, zh, zh + 44, "#4A5866", ec="#222", lw=0.3)
+        A.draw(ax, A.flush(), 8.1)
+    else:
+        a_frame(-1)
+        A.draw(ax, A.flush(), 6.6)
     A.box(150, 220, -345, -295, BENCH, BENCH + 58, "#F2C500", ec="#7a6400")                 # E-stop housing
     A.draw(ax, A.flush(), 7)
     es = A.proj((185, -345, BENCH + 30))
     ax.add_patch(Circle(es[:2], 17, fc="#8a1f23", ec="none", zorder=7.1))
     ax.add_patch(Circle(es[:2], 13, fc="#D0021B", ec="none", zorder=7.2))
-    front = A.pts([(XB - 450, -BY - 10, BASE_TOP), (XB + 450, -BY - 10, BASE_TOP), (XB + 450, -BY - 10, 560),
-                   (XB - 450, -BY - 10, 560)])
-    ax.add_patch(Polygon(front, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.8, alpha=0.08, zorder=8))
+    if not ply:                                                                              # acrylic side panel at -Y
+        front = A.pts([(XB - 450, -BY - 10, BASE_TOP), (XB + 450, -BY - 10, BASE_TOP), (XB + 450, -BY - 10, 560),
+                       (XB - 450, -BY - 10, 560)])
+        ax.add_patch(Polygon(front, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.8, alpha=0.08, zorder=8))
 
     # ---- axis arrows (bed X, column Z) and the theta tag
     def arr(p0, p1, lab, col, at=1.0, off=(0, 0)):
@@ -1247,7 +1296,7 @@ def fig_v1l(frame=None):
         ax.text(a_[0] + (b_[0] - a_[0]) * at + off[0], a_[1] + (b_[1] - a_[1]) * at + off[1], lab, color="white",
                 fontsize=11, fontweight="bold", ha="center", va="center", zorder=13,
                 bbox=dict(fc=col, ec=col, boxstyle="round,pad=0.2"))
-    arr((B0 - 20, -236, DECK[0] - 5), (B0 + 380, -236, DECK[0] - 5), "X", m.C_X, 1.0, (26, 0))
+    arr((B0 - 20, -DECK_Y - 16, DECK[0] - 5), (B0 + 380, -DECK_Y - 16, DECK[0] - 5), "X", m.C_X, 1.0, (26, 0))
     arr((X + 90, 0, Z + 380), (X + 90, 0, Z + 620), "Z", m.C_Z, 0.5, (26, 0))
     q = A.proj((X - 60, -45, Z + 255))
     ax.text(q[0] - 30, q[1], "θ", color="white", fontsize=11, fontweight="bold", ha="center", va="center", zorder=13,
@@ -1257,11 +1306,13 @@ def fig_v1l(frame=None):
 
     # ---- numbered callouts, two columns
     calls = [
-        (1, (-300, -BY, BASE_TOP - 9)), (2, (B0 + 600, -220, DECK[1])), (3, (XB + 40, -150, Z_U)),
+        (1, (-300, -BY, BASE_TOP - 9)), (2, (B0 + 600, -DECK_Y, 0.5 * (DECK[0] + DECK[1]) if ply else DECK[1])),
+        (3, (XF - 150, -120, Z_U) if ply else (XB + 40, -150, Z_U)),
         (4, (X + 40, -20, Z + 700)), (5, (X + 20, -95, Z + 255)), (6, (X + 7.5, -7.5, Z + 110)),
-        (7, (PX1 - 40, -PW, 0)), (8, (HX1 - 30, -HW - 16, -118)), (9, (B0 + 300, -215, PLAT_TOP - 7)),
+        (7, (PX1 - 40, -PW, 0)), (8, (HX1 - 30, -HW - 16, -118)), (9, (B0 + 300, -PLAT_Y, PLAT_TOP - 7) if not ply else (B0 + 400, -PLAT_Y, PLAT_TOP - 7)),
         (10, (CUPX, -60, -50)), (11, (-425, 95, BASE_TOP + 35)), (12, (185, -345, BENCH + 30)),
-        (13, (10, -540, FLOOR + 20)), (14, (XB - 450, -BY - 10, 470)),
+        (13, (10, -540, FLOOR + 20)),
+        (14, (XB + 250, TY - 9, 330) if ply else (XB - 450, -BY - 10, 470)),
     ]
     anchors = {n: A.proj(p3)[:2] for n, p3 in calls}
     P = A.pts(FL + [(X, -14, COL[5] + 70)])
@@ -1297,7 +1348,7 @@ def fig_v1l(frame=None):
         lg.text(0.065, y, a_, fontsize=9.3, va="top", color=m.C_TEXT, fontweight="bold")
         lg.text(0.065, y - 0.027, b_, fontsize=8.2, va="top", color="#51606e")
     if ply:
-        lg.text(0.0, 0.03, "앞쪽 합판 타워와 아크릴 옆판은 비쳐 보이게 그렸다.", fontsize=8, va="bottom", color="#7a8793")
+        lg.text(0.0, 0.03, "앞쪽(−Y) 측판과 정면 아크릴 창은 비쳐 보이게 그렸다.", fontsize=8, va="bottom", color="#7a8793")
     fig.text(0.012, 0.965, title, fontsize=16, fontweight="bold", color=m.C_TEXT)
     fig.text(0.012, 0.937, subtitle, fontsize=9.5, color="#51606e")
     save(fig, "fig9_v1l_budget_rig.png")
