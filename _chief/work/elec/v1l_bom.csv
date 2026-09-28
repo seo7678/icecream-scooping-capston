@@ -1,0 +1,74 @@
+ID,Subsystem,Part,Specification,Qty,Purpose,Unit price (KRW),Total (KRW),Source,Source URL,Price status (verified 2026-09-28 / estimate),Lead time,Borrowable,Food zone,Notes
+L01,Frame,알루미늄 프로파일 2040 (절단 주문),"20×40, 총 4 m (브리지 기둥 2×350, 빔 600, 가새 2×300, X레일 받침 2×800, 여유)",4,고정 브리지 + X 레일 받침,8800,35200,옥션 판매자(절단 가공),http://itempage3.auction.co.kr/DetailView.aspx?itemno=B752308206,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,"검색 결과 절단가 1000 mm 8,800원(400 mm 3,080원). 대안 11번가 DF2040 1 m 11,400원 https://www.11st.co.kr/products/1773507189. 슬롯/T너트 규격 확인 필요"
+L02,Frame,코너 브라켓·T너트·볼트,"20용 L브라켓 ×16, M5 T너트 ×50, M5×10 볼트 ×50",1,프로파일 체결,20000,20000,영진프로파일 등,https://www.yjprofile.co.kr/goods/goods_view.php?goodsNo=1000000021,estimate,국내 1–5일 (추정),No,No,T너트 개당 160–240원이 검색 결과에 보임; 브라켓 단가 미확인
+L03,Frame,베이스 판 MDF 18T (재단),"약 900×600×18, 1장",1,X 레일·브리지 설치 바닥,20000,20000,목재 재단몰/동네 목재상,https://jeildiy.com/product/mdf-%ED%95%A9%ED%8C%90-%EB%A7%9E%EC%B6%A4%EC%9E%AC%EB%8B%A8/68/,estimate,국내 3–7일 (추정),Maybe (학교 자재),No,"MDF 18T 1220×2440 전지 25,455원이 검색 결과에 보였으나 판매처 URL 미확정 + 재단비"
+L04,X axis,스테퍼 NEMA17 17HS4401급,"42각 40 mm, 1.7 A/상 (판매 페이지 사양 확인 필요)",1,X 베드 구동,6900,6900,11번가,https://www.11st.co.kr/products/5227024745,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,"1.7 A·1.5 Ω·0.40 N·m는 통상 사양 — 판매 페이지 미열람, 확인 필요"
+L05,X axis,TR8 리드스크류 600 mm + 황동 너트,"Ø8, 리드 4 mm 권장 (리드 8이면 0.4 N·m에서 94–126 N로 드래그 힘 여유 부족)",1,X 드래그 구동,12000,12000,싸이피아/알리,https://scipia.com/product/cja-3-8mm-%EB%A6%AC%EB%93%9C%EC%8A%A4%ED%81%AC%EB%A5%98-500mm-%EB%84%88%ED%8A%B8-%EB%B3%BC%EC%8A%A4%ED%81%AC%EB%A5%98-3d%ED%94%84%EB%A6%B0%ED%84%B0/1169/,estimate,국내 1–5일 (추정),No,No,"싸이피아 300/400 mm+너트 11,000원 확인(https://scipia.com/product/cja-8mm-리드스크류-300400mm너트-볼스크류-3d프린터/794/); 600 mm·리드 4 가격 미확인"
+L06,X axis,리드스크류 부속 (X·Z),"플렉시블 커플링 5×8 ×2, KP08 필로우블록 ×3",1,스크류-모터 연결·지지,8000,8000,알리/국내,,estimate,알리 7–20일 (추정·확인 필요),No,No,
+L07,X axis,SBR16 지지형 리니어 레일 세트,SBR16 800 mm ×2 + SBR16UU ×4 (US$22.56),1,X 이동 베드 안내 (전 길이 지지 → 처짐 없음),30456,30456,AliExpress,https://www.aliexpress.com/item/32272272007.html,verified 2026-09-28 (search snippet),알리 7–20일 (추정·확인 필요),No,No,L-A는 MGN12 또는 12 mm 샤프트+LM12UU. SBR16은 같은 둥근축 계열이면서 지지형이라 800 mm 경간 처짐 문제 없음 → 기계 담당 확인 필요. 무게·높이 확인
+L08,X axis,[대안·미포함] MGN12 800 mm + MGN12H,"레일 1 + 블록 1 (US$37.2), 2세트 필요",0,X 안내 대안,50220,0,AliExpress,https://www.aliexpress.com/item/32824493549.html,verified 2026-09-28 (search snippet),알리 7–20일 (추정·확인 필요),No,No,"대안 — 총액 미포함. 2세트면 +100,440원(블록 추가 시 더). SBR16 대비 약 +70,000원"
+L09,Z axis,스테퍼 NEMA17 17HS4401급,"42각 40 mm, 1.7 A/상",1,Z 구동,6900,6900,11번가,https://www.11st.co.kr/products/5227024745,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,사양 확인 필요
+L10,Z axis,TR8 리드 2 mm 300 mm + 황동 너트,"Ø8, 피치 2·리드 2 (1줄) → 정지 시 자립 목적",1,Z 구동 + 전원 차단 시 낙하 방지,5819,5819,AliExpress,https://www.aliexpress.com/item/32808282813.html,verified 2026-09-28 (search snippet),알리 7–20일 (추정·확인 필요),No,No,표기가 US$4.31은 200–500 mm 옵션 중 최저가일 수 있음 → 300 mm 가격 확인 필요. 진동 하 자립은 실측 확인
+L11,Z axis,MGN12 300 mm + MGN12H,"레일 1 + 블록 1, US$14.85 (배송 포함 표기)",2,Z 안내,20048,40096,AliExpress,https://www.aliexpress.com/item/32540712851.html,verified 2026-09-28 (search snippet),알리 7–20일 (추정·확인 필요),No,No,
+L12,Z axis,Z 캐리지·헤드 판재,알루미늄 5T 재단 또는 아크릴·합판 (학교 레이저커터),1,"Z 캐리지, θ 모터 브래킷, 크랭크",12000,12000,재단 판재,,estimate,국내 1–5일 (추정),Partly (레이저커터),No,
+L13,Theta axis,스테퍼 + 유성기어 17HS15-1684S-PG27,"NEMA17 40 mm, 26.85:1, 1.68 A, 1.60 Ω, 36 N·cm; 기어박스 허용 3 N·m (순간 5 N·m)",1,스쿱 피치 θ (G-code 축),38961,38961,StepperOnline,https://www.omc-stepperonline.com/nema-17-stepper-motor-bipolar-l-40mm-w-gear-ratio-27-1-planetary-gearbox-17hs15-1684s-pg27,verified 2026-09-28 (search snippet),국제배송 7–15일 (추정·확인 필요),No,No,"필요 τ_close 2.0–3.5 N·m(F 56–100 N, R 35 mm)가 허용 3 N·m에 근접/초과 → 기계 담당 확인 필요. 모터×기어비 이론 9.7 N·m라 전류 제한으로 기어 보호"
+L14,Theta axis,푸시로드 SUS304 M8 전산볼트,1 m → 2개 절단,1,이중 push-rod,5000,5000,국내 철물,,estimate,국내 1–5일 (추정),No,"Yes (PoC, 하단)",
+L15,Theta axis,SUS 로드엔드 PHS8 (M8 암나사),"스테인리스, 하부(스쿱 레버측)",2,push-rod 하부 관절,11110,22220,베어링웍스,https://bearingworks.co.kr/1505271143/?idx=28117,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,Yes (PoC),"[절감 4순위: SUS 로드엔드 → 강 로드엔드(PoC 한정, V1b에서 SUS 복귀), −17,220원]"
+L16,Theta axis,"로드엔드 M8(강, 상부) + 핀·부싱·칼라","로드엔드 ×2, Ø8 핀, 플랜지 부싱, 샤프트 칼라",1,크랭크측 관절 (긴 구멍 1곳 ±0.3 mm),10000,10000,알리/국내,,estimate,알리 7–20일 (추정·확인 필요),No,No,
+L17,Food module,아이스크림 스쿱 SUS304,코멧 키친 20호 (형상은 기계 담당 확정),2,스쿱 (1 + 예비),7990,15980,다나와 최저가,https://m.danawa.com/product/product.html?code=103886402,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,Yes,"[절감 7순위: 예비 스쿱 1개 제외, −7,990원]"
+L18,Food module,스템 SUS304 파이프 + 캡 + 식품용 실리콘,"Ø25–30 × 200 mm ×2, 볼트 캡",1,스템 (용접 없음),20000,20000,스텐 파이프 절단몰,,estimate,국내 1–5일 (추정),No,Yes (PoC),
+L19,Food module,스쿱 클램프·피벗 SUS 볼트류,M5/M6 SUS 볼트·너트·와셔,1,볼트 체결,5000,5000,국내,,estimate,국내 1–5일 (추정),No,Yes,
+L20,Container,젤라토 팬 SUS 360×165×120 (~5 L),1개 아이스크림 전용 + 1개 오일 점토 전용,2,시험 용기 (레인 270 mm),25000,50000,업소용 주방몰,,estimate,국내 1–5일 (추정),No,Yes,"[절감 2순위: 점토 전용 팬 1개 → 같은 내부치수 플라스틱 박스(~5,000원), −20,000원] 가격 미확인. 대안 GN 1/3 밧드 325×176 (11번가 10,400원 표기, 타공/깊이 옵션 확인 필요 https://www.11st.co.kr/products/1541095579)"
+L21,Cold chain,XPS 아이소핑크 50T 900×1800,1장 (홀더 벽 + 뚜껑),1,단열 팬 홀더,9500,9500,비제이건축자재,https://gunjajae.imweb.me/27/?idx=94,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,배송비 별도·부피 큼 → 근처 건재상 구매 권장
+L22,Cold chain,홀더 외피·접착·테이프,"합판 9T 자투리, 폼 접착제, 알루미늄 테이프",1,홀더 제작,15000,15000,국내,,estimate,국내 1–5일 (추정),No,No,
+L23,Cold chain,보냉팩 (젤),소형,6,홀더 벽 보냉,1000,6000,국내,,estimate,국내 1–5일 (추정),No,No,
+L24,Cold chain,[선택·미포함] 냉동고 외부 온도조절기 220 V,Inkbird ITC-308 계열 220 V 사전배선형 (110 V 미국형 금지),0,−14 °C 템퍼링,45000,0,국내/알리,https://www.inkbird.com/products/temperature-controller-itc-308,estimate,알리 7–20일 (추정·확인 필요),No,No,선택 — 총액 미포함. STC-1000 생모듈은 상용전원 배선이 필요해 학생 제작 비권장
+L25,Sensors,싱글포인트 로드셀 20 kg (Seeed 114990097),"2.0±0.15 mV/V, C2, 합성오차 <±0.03 %RO, 권장 여기 10–15 V, 안전과부하 150 %, 플랫폼 350×350",1,수직 F_z + 팬 질량(portion),12720,12720,아이씨뱅큐,https://www.icbanq.com/P005700352,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,사양은 Seeed 판매 페이지 검색 결과(원문 PDF 미열람). VAT 포함 여부 확인 필요. 홀더 외곽이 350 mm 넘으면 편심오차 확인
+L26,Sensors,S-빔 로드셀 20 kg (CALT DYLY-103),"2.0 mV/V (표기 ±0.05 또는 ±10 % 불일치), M8×1.25, 인장/압축, −20~+80 °C",1,수평 F_x (X 구속),48479,48479,AliExpress,https://www.aliexpress.com/item/32990229778.html,verified 2026-09-28 (search snippet),알리 7–20일 (추정·확인 필요),No,No,"[절감 3순위: S-빔 → 싱글포인트 20 kg(L25와 같은 것) 수평 장착, −35,759원] 표기가는 용량 옵션 중 하나일 수 있음 → 20 kg 가격 확인 필요. 절감안: 같은 바형 20 kg로 대체"
+L27,Sensors,HX711 로드셀 앰프 모듈,"24-bit ΣΔ, 10/80 SPS (RATE 핀), 게인 128 = ±0.5·AVDD/128",2,로드셀 2개 각각 채널 A,2750,5500,아이씨뱅큐 (C50),https://www.icbanq.com/P016195862,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,VAT 포함가. 모듈의 RATE 핀 처리(GND 고정 여부)·여기전압 실측 필요
+L28,Sensors,"Arduino Nano 호환 (CH340, 헤더 납땜)",ATmega328P 5 V,1,HX711 ×2 + MAX31855 읽기 → USB로 노트북,8700,8700,아이씨뱅큐 (DM63),https://www.icbanq.com/P012409445,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,
+L29,Sensors,플랫폼 X 부동 레일 MGN12 200 mm + MGN12H,레일 1 + 블록 1 (US$7.78 표기),2,팬 플랫폼을 X로만 자유롭게,10503,21006,AliExpress,https://www.aliexpress.com/item/32794157046.html,verified 2026-09-28 (search snippet),알리 7–20일 (추정·확인 필요),No,No,"[절감 5순위: X 부동 레일 → 판스프링 플렉셔(현장 교정), −18,006원] 표기가는 최저 옵션가일 수 있음 → 200 mm+H블록 가격 확인 필요. 절감안: 판스프링 플렉셔"
+L30,Sensors,플랫폼 판재·과부하 스토퍼·S-빔 연결 로드엔드,"중간판, M6 셋스크류 스토퍼(간극 ~0.3–0.5 mm), M8 로드엔드 ×2",1,로드셀 과부하 방지 + 축하중만 전달,12000,12000,국내/알리,,estimate,국내 1–5일 (추정),No,No,
+L31,Sensors,4심 쉴드 케이블 2 m + 커넥터,"22–24 AWG 4C+실드, JST-XH 또는 GX12",1,로드셀 → HX711,8000,8000,국내,,estimate,국내 1–5일 (추정),No,No,
+L32,Sensors,MAX31855K 열전대 모듈,"K형, 14-bit, 0.25 °C, 판독 −270~+1800 °C, ±2 °C(−200~+700 °C), 변환 70/100 ms",1,팬/아이스크림 온도 + 내부(주변) 온도,11000,11000,아이씨뱅큐 (JK전자),https://www.icbanq.com/P007421215,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,MAX6675는 0 °C 이상만 측정 → 사용 불가
+L33,Sensors,K형 열전대 프로브 (DFRobot SEN0139),K형,1,팬 표면/아이스크림 온도,5350,5350,아이씨뱅큐,https://www.icbanq.com/P005637307,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,Yes (탐침 끝),측정 범위·시스 재질 확인 필요 (SUS 시스 권장)
+L34,Control,[옵션 A] Arduino Uno R3 호환 (CH340),"GRBL 1.1 (3축: X, Y→θ, Z)",1,모션 보드,10500,10500,아이씨뱅큐,https://www.icbanq.com/P011849489,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,
+L35,Control,[옵션 A] CNC Shield V3,"스텝스틱 4소켓, 12–36 V (판매처 표기 확인 필요)",1,드라이버 베이스,2970,2970,아이씨뱅큐,https://www.icbanq.com/P014407718,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,
+L36,Control,[옵션 A] DRV8825 드라이버 5개 (Keyestudio),"최대 45 V, 1/32 스텝",1,X·Z·θ 드라이버 + 예비 2,31900,31900,아이씨뱅큐,https://www.icbanq.com/P008838468,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,"[절감 1순위: DRV8825를 알리 5개 묶음으로 (기능 동일, 리드타임 +1–3주), −23,900원] 29,000원+VAT. 절감안: 알리 DRV8825 5개(가격 미확인, ~8,000원 추정) 또는 TMC2209 5개 US$16.8 https://www.aliexpress.com/item/4001170716715.html"
+L37,Control,[옵션 B·미포함] BTT SKR Mini E3 V3.0,"32-bit, TMC2209 ×4 온보드 (UART)",0,모션 보드 대안 (Klipper/Marlin),53703,0,AliExpress,https://www.aliexpress.com/item/1005003519869375.html,verified 2026-09-28 (search snippet),알리 7–20일 (추정·확인 필요),No,No,"대안 — 총액 미포함. B 선택 시 옵션 A 3행(45,370원) 대신 → +8,333원. Klipper는 리눅스 호스트 필요"
+L38,Control,리미트 스위치 (기계식 엔드스탑),3핀 케이블 포함,4,X 홈·X 끝·Z 상단(Z_SAFE 기준)·θ 홈,1200,4800,아이씨뱅큐,https://www.icbanq.com/P007320876,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,[빼지 않음]
+L39,Control,드라이버 냉각팬 40 mm 24 V + 방열판,,1,DRV8825 1.2–1.5 A 운전 시 냉각,4000,4000,국내,,estimate,국내 1–5일 (추정),No,No,
+L40,Control,"USB 케이블 (Uno B형, Nano mini-B)","1–1.5 m, 체인 통과용은 유연형",2,노트북 연결,2000,4000,국내,,estimate,국내 1–5일 (추정),No,No,Nano 판매 구성에 케이블 포함 여부 확인
+L41,Power,Mean Well LRS-150-24,"24 V 6.5 A 156 W, 밀폐형",1,모터 전원 (드라이버 VMOT) + 릴레이 코일,23000,23000,아이씨뱅큐,https://www.icbanq.com/P013749268,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,[빼지 않음] VAT 포함 여부·정품 확인 필요. 필요량 계산 피크 2.4 A (v1l_elec.md §5)
+L42,Power,AC 인렛 C14 (스위치+퓨즈) + 전원코드 + 지연형 퓨즈,"250 V 10 A 인렛, T 퓨즈 (정격은 PSU 입력전류 보고 결정)",1,주전원 차단·보호,7000,7000,국내,,estimate,국내 1–5일 (추정),No,No,[빼지 않음]
+L43,Power,DC 인라인 블레이드 퓨즈홀더 ×2 + 퓨즈,"F1 1 A (제어/코일), F2 5 A (모터 버스)",1,24 V 분기 보호,3000,3000,국내,,estimate,국내 1–5일 (추정),No,No,[빼지 않음]
+L44,Power,배선 자재,"실리콘선 18AWG 적/흑 각 5 m, 22AWG, XH/듀폰, 페룰, 수축튜브, 단자대(스타 접지)",1,전원·신호 배선,20000,20000,국내,,estimate,국내 1–5일 (추정),No,No,
+L45,Power,케이블 체인 10×10 1 m,오픈형,1,이동 베드 USB 케이블,6800,6800,11번가,https://www.11st.co.kr/products/5654087372,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,
+L46,Safety,비상정지 스위치 22Φ 버섯형 1NO1NC + 박스,"ONPOW LAS0-K-11TSA급, 회전 해제형",1,정지 범주 0: 모터 전원 차단,18300,18300,파츠-파츠/알파이플러스 목록,https://parts-parts.co.kr/category/%EB%B9%84%EC%83%81%EC%A0%95%EC%A7%80-%EC%8A%A4%EC%9C%84%EC%B9%98/199/,estimate,국내 1–5일 (추정),No,No,"검색 결과 목록가 13,200–28,200원(개별 URL 미확정). 안전부품 — 빼지 않음"
+L47,Safety,제어 릴레이 K1 LY2N-DC24 + 소켓,"2c, 접점 10 A (28 VDC 저항부하 정격 확인 필요)",1,E-stop → 모터 24 V 개폐 + 자기유지,10000,10000,엘레파츠,https://eleparts.co.kr/goods/view?no=370273,estimate,국내 1–5일 (추정),No,No,"[빼지 않음] 릴레이 단가 미확인. 소켓 표준가 2,156원부터(미스미 검색 결과)"
+L48,Safety,리셋(기동) 푸시버튼 22Φ NO,"녹색, 모멘터리",1,E-stop 해제 후 재기동 (자동 재기동 방지),3000,3000,국내,,estimate,국내 1–5일 (추정),No,No,[빼지 않음]
+L49,Safety,Hold-to-run 발판 스위치,KACON 발판스위치 (NC 접점 있는 모델),1,데드맨: 떼면 feed hold,8450,8450,11번가,https://www.11st.co.kr/products/1228265236,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,[빼지 않음] 옵션별 가격 차이 가능 → 확인 필요
+L50,Safety,가드 투명 아크릴 3T 900×600,1장 → 3면 가드 (레이저 절단),1,가동부 분리 (최소 가드),27600,27600,도매꾹,https://mobile.domeggook.com/49771430?market=dome,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,안전부품 — 빼지 않음. 부족하면 1장 추가
+L51,Misc,볼트·너트·와셔 세트,"M3–M8, 식품영역은 SUS",1,조립 전반,20000,20000,국내,,estimate,국내 1–5일 (추정),No,No,
+L52,Misc,PETG 필라멘트 1 kg (eSUN),1.75 mm,1,"브래킷, 컵 홀더, 드립 우산, 케이블 가이드, 전장 케이스",21700,21700,다나와 최저가,https://prod.danawa.com/info/?pcode=4908695,verified 2026-09-28 (search snippet),국내 1–5일 (추정),No,No,
+L53,Misc,Y 레인 인덱스 핀·가이드,"Ø8 SUS 핀 ×2, 합판 가이드(레이저)",1,Y 레인 3위치 수동 인덱스,3000,3000,국내,,estimate,국내 1–5일 (추정),No,No,
+L54,Misc,종이컵 (시험용),약 50개,1,배출 목표,5000,5000,국내,,estimate,국내 1–5일 (추정),No,Yes,
+L55,Test consumables,하드 아이스크림 라벨리 바닐라 4 L 벌크,"가정: E0 1통 + V1-L 3통; 1통 ≈ 20 portion(밀도 0.55–0.6 kg/L 가정, 115 g/portion)",4,E0 + V1-L 시험 (시식 없음·폐기),23390,93560,SSG.COM,https://www.ssg.com/item/itemView.ssg?itemId=1000050961054,verified 2026-09-28 (search snippet),국내 1–3일 냉동배송 (추정),No,Yes,"[절감 6순위: 아이스크림 4통 → 3통(반복 횟수 감소), −23,390원] 검색 결과 정상가 24,900원·판매가 23,390원. 냉동 배송비 별도 가능"
+L56,Test consumables,오일 점토 (유토),3 kg (팬 바닥에 폼 스페이서 + 점토층 ~30 mm),3,디버깅 모사재 (재사용),10000,30000,화방,https://www.homi.co.kr/mobile/m_goods_detail.php?ps_ctid=12020200&ps_goid=4467,estimate,국내 1–5일 (추정),No,No,"[절감 8순위: 점토 3 kg → 2 kg, −10,000원] 검색 결과 1 kg 8,000–24,200원 범위(상품 매칭 불확실) → 추정"
+L57,Test consumables,위생·청소 소모품,"니트릴 장갑, 키친타월, 세정제",1,시험 위생,10000,10000,국내,,estimate,국내 1–5일 (추정),No,No,
+L58,Shipping,배송비,"국내 약 8곳 × 3,000–4,000원 + 냉동배송 + StepperOnline 국제배송(미확인) + 알리 일부 유료",1,R8: 배송비 포함,45000,45000,-,,estimate,-,No,No,
+L59,Contingency,예비비,≥ 15만 원 (R8),1,가격 변동·파손·추가 부품,150000,150000,-,,n/a (allowance),-,No,No,
+L60,Borrowed (0원),학생 노트북,USB 2포트 이상,1,호스트: Python 상태기계·로그·G-code 송신,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,힘 측정 중에는 배터리 구동 권장(접지 루프 회피)
+L61,Borrowed (0원),냉동고 (체스트형),보관·템퍼링,1,"아이스크림 보관, 팬 −14 °C 템퍼링",0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,빌림 0원 (R8 가정)
+L62,Borrowed (0원),멀티미터,"DC V/A, 저항, 통전",1,"배선 검사, HX711 여기전압·전류 설정 확인",0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,
+L63,Borrowed (0원),납땜 장비,인두·땜납·흡입기,1,헤더·커넥터 납땜,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,
+L64,Borrowed (0원),3D 프린터,FDM (PETG),1,비식품 부품 출력,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,필라멘트는 L행에 포함
+L65,Borrowed (0원),레이저 커터,아크릴·합판 절단,1,가드·판재·가이드,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,
+L66,Borrowed (0원),공구,육각렌치·드릴·프로파일 절단(공작실),1,조립,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,R9: 용접·정밀가공 없음
+L67,Borrowed (0원),교정 분동 / 저울,1 kg 급 (없으면 무게 잰 물병),1,로드셀 교정,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,"구매 시 M1급 1 kg 35,200원(11번가 검색 결과 http://m.11st.co.kr/products/m/1799706016)"
+L68,Borrowed (0원),기준 온도계,"±0.5 °C급, 얼음물 0 °C 점검",1,열전대 오프셋 교정,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,
+L69,Borrowed (0원),푸시풀 게이지,(사지 않음),1,E0 힘 측정은 힘 플랫폼으로 대체,0,0,학교/팀 보유,,n/a (borrowed/owned),-,Yes,No,빌릴 수 있으면 교차 검증용
+SUM-A,합계,L-A 구매 합계 (예비비 제외),,,,,941367,,,,,,,
+SUM-B,합계,L-A 총액 (예비비 포함),,,,,1091367,,,,,,,R8 100만 원 초과
+SUM-C,합계,권장 V1-L 구매 합계 (절감 1–5 적용),,,,,826482,,,,,,,절감액 중 추정치 포함 → v1l_elec.md §8
+SUM-D,합계,"권장 V1-L 총액 (절감 1–5 + 예비비 150,000)",,,,,976482,,,,,,,"≤ 1,000,000"
