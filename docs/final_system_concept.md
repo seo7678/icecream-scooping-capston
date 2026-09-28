@@ -106,7 +106,20 @@
 | 4 (안전) | 컵 베이 존재감지 PL | 작업자가 하루 수백 번 접근(F2). V1의 일반 광전 센서는 PL c–d 요구를 못 채울 수 있음 | V1은 명시하고 시험. 제품은 안전 등급 라이트 커튼 |
 | 5 (가치) | 사람보다 느릴 수 있음 | 기계 11–23 s. 숙련자 손 스쿠핑 시간은 아직 측정 안 됨(P0-1) | 가치를 속도가 아니라 작업자 점유 시간으로 측정. 피크 처리량이 중요한 매장에는 권하지 않음 |
 
-## 6. 첫 시제품 — V1a: 한 통짜리 X-Z-θ 장치
+## 6. 첫 시제품 — V1-S(학생 제작형)로 갱신 (2026-09)
+
+> **학부 종합설계 수준의 난관(예산·가공·펌웨어·냉각·배출)을 반영해 첫 시제품을 V1-S로 바꿨다.** 자세한 근거와 대체안 비교는 [`capstone_challenges_and_alternatives.md`](capstone_challenges_and_alternatives.md).
+>
+> 요약:
+> - 직사각 젤라토 팬(모든 레인 270 mm, 힘 ~56 N @ 90 kPa)
+> - 상용 볼스크류 모듈 + 알루미늄 프로파일(레버 517 mm, 110 N에서 ~0.5 mm)
+> - 팬 쪽 Y 슬라이드, 팬 힘 플랫폼(접촉·힘·portion 질량)
+> - 90° 위상 이중 push-rod(θ 360°, 뒤집기 배출)
+> - Klipper/grblHAL + 파이 상태기계, 단열 팬 홀더, BOM ~291만 원(빌리면 ~249만 원)
+>
+> 아래 V1a 설명은 원래 계획(원형 통, 강관 구조)이며 V1b(여러 통 시연)의 기준으로 남긴다.
+
+### 6.1 (원래 계획) V1a: 한 통짜리 X-Z-θ 장치
 
 **무엇을:** V1 BOM에서 Y 크로스슬라이드(C10–C12), 컵 저울·매립 웰(C26), 베이 빔(C27), 헹굼(C28), HMI(C36), 인클로저(C39), 선택 C44를 뺀 구성이다. 배출 시험용 빗(C29)과 기준 저울(C43)은 넣는다. X 빔은 V1b에서 다시 쓰도록 전장으로 사고, 통 1개만 그 아래 둔다.
 
@@ -151,6 +164,8 @@
 
 ## 9. 다음 행동 (순서대로)
 
+> V1-S 기준의 30주 계획과 줄일 때의 우선순위는 `capstone_challenges_and_alternatives.md` §5.
+
 1. **E0 확장 실행**(1–2주, 기계 없이): θ 0°/−30°, d 20/25/28, 저울로 F_z → C-Gate 0 → `calc/` 가정값 교체 후 전부 재실행
 2. 매장 스쿱 실측(R, 두께, rim 반경)과 매장 통 치수 실측 → `calc/cartesian_model.py` 갱신 → 통당 portion 재계산. 같은 계산으로 **레인 간격(±40 vs ±20)과 옆 레인 2 stroke 여부**를 정한다(옆 레인 한 스쿱이 가정값에서 −20 % 이상 부족, `tub_lane_planner.md` §4)
 3. V1a 부품 발주(C-Gate 0 결과로 구조 등급 결정 후)
@@ -175,6 +190,6 @@
 | 10 | 예상 사이클 | 기계 14.5 s(11.1–22.7), 작업자 ~3 s, 140–256 스쿱/h(추정) |
 | 11 | 가장 큰 기계 위험 | 실측되지 않은 절삭력이 ~0.8 m 레버로 구조·Z·θ에 걸림 → E0 먼저 |
 | 12 | 가장 큰 선행기술 위험 | Dexai US11597084B2(상태별 토크 한계, 등록) FTO. 신규성 측면에서는 Columbia 스쿠핑 로봇 + 갠트리 계량 식품 장치(US11969878) 조합의 자명성 |
-| 13 | 첫 시제품 | E0 확장(기계 없이) → **V1a 한 통짜리 X-Z-θ 장치**(~443만 원) → V1b 자동 사이클 |
+| 13 | 첫 시제품 | E0 확장(기계 없이) → **V1-S 학생 제작형**(젤라토 팬·상용 모듈·팬 힘 플랫폼, ~291만 원) → V1b 여러 통 자동 사이클 |
 | 14 | 수정·생성 파일 | 신규: docs 14(이 문서 포함), calc 스크립트 7 + 출력, firmware 2, cad 2, BOM 1, research/components.md. 수정: concept_brief 전면 개정(Cartesian 기준), Legacy 문서 배너(00, 04, 11–14, 16, 17, 20, 23, 24), research/patents.md §5, P0-3 프로토콜 §7, README, calc/README, firmware/README |
 | 15 | 커밋 | design: replace manual positioning with Cartesian gantry / analysis: size gantry and Z axis / design: define XYZ and local scoop architecture / analysis: re-select scooping principle / control: add flavor coordinate and state machine / safety: add collision and hygiene architecture / research: recheck robotic prior art / docs: publish updated final concept |

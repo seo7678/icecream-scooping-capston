@@ -55,3 +55,17 @@
 | A37 | 힘 한계 | F_TARGET 0.55 × 200 = 110 N, F_STOP 0.8 × 200 = 160 N(50 ms), 이송 충돌 30 N | A23 비례, 설계 선택 | **H**(안전·성능) | E0 → C-Gate 0 | firmware/state_machine | – |
 | A38 | 작업자 컵 놓기·가져가기 | 3 s/스쿱 | 근거 없음 | M | V1b 영상 | cycle_time_estimate | – |
 | A39 | 클램셸 비교 조건 | 턱 R 44 mm, 발자국 여유 0 / 6 mm, 초기 표면 −20 mm, 5 mm 격자, portion당 최대 3패스 | 비교용 설정 | L(결론 민감도 확인함: 5·8패스도 같음) | – | scoop_mechanism_compare | – |
+
+## 학부 제작형 V1-S 추가 가정 (2026-09)
+
+| ID | 변수 | 가정값 | 근거 | 민감도 | 측정 방법 | 사용처 | 측정값 |
+|---|---|---|---|---|---|---|---|
+| A40 | 젤라토 팬 치수 | 360 × 165 × 120 mm(직선 벽), 대안 GN 1/3 325 × 176 × 150 | 일반 규격 `[확인 필요]` | M | 구매 전 실측 | capstone_alternatives §1 | – |
+| A41 | V1-S 스템·Z 행정 | 스템 200 mm, C +100 … −75, 하부 Z 베어링 420 mm → 레버 517 mm | 팬 깊이에서 유도 | **H**(강성) | 조립 후 측정 | capstone_alternatives §2 | – |
+| A42 | 상용 볼스크류 모듈 강성 | 보강 프로파일 구성(HGR15급 블록 200 kN/mm, 간격 150 mm)과 같다고 가정 | 근거 없음 | **H** | 추 하중으로 스쿱 끝 강성 측정 | capstone_alternatives §2 | – |
+| A43 | 단열 홀더 열 조건 | XPS k = 0.034 W/mK, 벽 50 mm, 열린 상부 h = 10 W/m²K, 실내 22 °C | 일반치 | M | 온도 상승 곡선 측정 | capstone_alternatives §4 | – |
+| A44 | 아이스크림 겉보기 비열(−14 °C, 잠열 포함) | 3–6 kJ/kg·K | 확인된 값 없음 `[미검증]` | M | 위와 같음 | capstone_alternatives §4 | – |
+| A45 | 팬 힘 플랫폼 분해능 | ~0.3 g(20 kg 셀, HX711 유효 16비트) | 일반치 | L | 분동 교정 | capstone_alternatives §5 | – |
+| A46 | 호스트 힘 루프 지연 | 30–150 ms | 근거 없음 | M | 정지 거리 측정 | capstone_alternatives §6 | – |
+| A47 | V1-S 부품 가격 | `BOM/capstone_v1s.csv` 추정가 | 국내 온라인 소매가 수준 추정 | M | 견적 | BOM | – |
+

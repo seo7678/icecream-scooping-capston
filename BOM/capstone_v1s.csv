@@ -1,0 +1,32 @@
+ID,Subsystem,Part,Specification,Qty,Purpose,Estimated price (KRW total),Borrowable,Food zone,Replaces (V1 BOM),Notes
+S01,Frame,Aluminium profile frame,4040 + 4080 ~8 m + corner brackets + feet (school workshop cuts),1 set,Frame over the pan holder; no welding or machining,220000,No,No,C01 C02 C03 C04,Cut to length by supplier; bolted only
+S02,X axis,Ball-screw linear module X,Commercial module; SFU1605/1610; dual rail; ~700 mm stroke; NEMA23 flange,1,Travel pan <-> cup + drag,280000,No,No,C05 C06 C09,Check moment rating in catalogue (M config assumption)
+S03,Z axis,Ball-screw linear module Z,Commercial module; SFU1605; dual rail; ~250 mm stroke,1,Approach / depth / lift,160000,No,No,C13 C14,Short stroke thanks to 120 mm deep pan
+S04,X axis,Closed-loop stepper set X,NEMA23 ~2-3 N·m + step/dir closed-loop driver,1,X drive,150000,No,No,C07,Step/dir: works with Klipper/grblHAL
+S05,Z axis,Closed-loop stepper set Z with brake,NEMA17 + 24 V spring brake + step/dir closed-loop driver,1,Z drive + power-off hold,160000,No,No,C15,
+S06,Z axis,Counterbalance,Gas spring ~40-60 N (tune after weighing),1,Fail-safe up,30000,No,No,C16,
+S07,Theta axis,Stepper + planetary gearbox,NEMA17 + 1:27 planetary (~9 N·m output) + TMC driver,1,Scoop pitch; standard G-code A axis,80000,No,No,C19 C20,Replaces DC gearmotor so off-the-shelf firmware can drive it
+S08,Y axis,Tub-side Y slide,T8 lead-screw slide ~150 mm + NEMA17 + driver,1,Moves the pan under the fixed lane (+-38 mm),70000,No,No,C10 C11 C12,Removes the cantilever Y cross-slide from the gantry
+S09,Control,Motion board,3D-printer class board (e.g. 32-bit + TMC drivers) running Klipper or grblHAL,1,4-axis motion + homing + limits,70000,No,No,C34,
+S10,Control,Host computer,Raspberry Pi 4/5 + SD + PSU,1,State machine / HMI / logging (Python),120000,Yes,No,C34 C36,Often available in the department
+S11,Power,Power supplies + wiring,48 V + 24 V PSUs; fuses; cable chains; connectors,1 set,,160000,No,No,C40,
+S12,Head,Head plates,6061 plates laser-cut or school CNC,1 set,Head bracket; crank plates,60000,No,No,C04 C21,
+S13,Head,3D-printed parts,PETG covers; drip umbrella mock-up; cable guides,1 lot,Non-food parts,20000,No,No,C21,FDM only above the umbrella
+S14,Head,Pins + bushings + rod ends,Dia 8 pins; flanged bushings; clevises; shaft collars,1 set,Two push-rods 90 deg apart (360 deg pitch),40000,No,Yes (PoC),C24,One lower pin in a slotted hole (+-0.3 mm)
+S15,Food module,Push-rods,304 rod dia 8 x 2 per module,2 sets,Dual push-rod pitch drive,30000,No,Yes (PoC),C24,
+S16,Food module,Scoops,Commercial 304 ice cream scoop (store model),3,2 modules + spare,60000,No,Yes,C22,
+S17,Food module,Stem,304 tube OD30 x 3; bolted end caps + food-grade silicone (PoC),2,Stem,40000,No,Yes (PoC),C23 C25,No TIG welding in V1-S; test product is discarded
+S18,Container,Gelato pans,Stainless pan 360x165x120 (~5 L),3,Test containers: straight walls -> equal lanes,90000,No,Yes,C42 (partly),Confirm size with supplier
+S19,Cold chain,Insulated pan holder,XPS 50 mm box + plywood shell + XPS lid,1,Keeps the pan at -14 C for tens of minutes on the bench,40000,No,No,C30 C32,Calc: capstone_alternatives.md s4
+S20,Cold chain,Cold packs,Eutectic or gel packs for the holder walls,1 set,Slow warm-up between tests,30000,No,No,,
+S21,Cold chain,Chest freezer,Used 200-300 L chest freezer,1,Tempering + storage between sessions,150000,Yes,No,C30,Borrow if possible
+S22,Cold chain,Thermostat + thermocouples,External-probe thermostat; 2 thermocouples + MAX31856,1 set,Hold -14 C; log pan temperature,80000,No,Probe tip,C31 C33,
+S23,Sensors,Pan force platform,20 kg single-point cell (vertical) + 20 kg S-beam (X) + small ball-rail + 2 x HX711,1 set,Contact detection + F_x + F_z + portion mass (pan weight change),90000,No,No,C08 C17 C26 C44,Replaces both nut load cells and the cup scale
+S24,Cup station,Cup holder + comb,3D-printed holder; 304 wire comb,1,Dispense target; comb eject test,20000,No,Yes (comb),C26 C29,
+S25,Safety,E-stop + safety relay + contactor,ISO 13850-style E-stop; safety relay,1 set,Stop category 0,60000,No,No,C37,
+S26,Safety,Hold-to-run pendant,Two-hand or deadman button wired to driver enable,1,Operator present during V1-S tests,20000,No,No,C38,
+S27,Safety,Guard panels + interlock,Polycarbonate panels on profile + one door switch,1 set,Separation of moving parts,100000,No,No,C39,Full enclosure only for V1b demo
+S28,Test,Push-pull force gauge + slide (E0),Digital gauge 500 N + manual slide + scoop fixture,1 set,First force numbers before building,150000,Yes,Yes (scoop),B34,Borrow from a lab if possible
+S29,Test,Surrogate material,Oil-based modelling clay 5 kg (+ calibration against ice cream in E0),1 lot,Debugging without ice cream,30000,No,No,,Candidate only; u must be calibrated
+S30,Test,Ice cream,Hard ice cream bulk packs for tests,20,E0 + V1-S tests,200000,No,Yes,C42,Test product is discarded
+S31,Misc,Fasteners + wiring,Bolts; T-nuts; wires; connectors,1 lot,,100000,No,No,C41,

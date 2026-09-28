@@ -721,6 +721,278 @@ def fig_y_axis():
     save(fig, "fig6_y_axis_lanes.png")
 
 
+# =====================================================================================
+# Fig 7 — V1-S student-buildable rig (alternatives applied)
+# =====================================================================================
+def fig_v1s():
+    import capstone_alternatives as ca  # noqa: F401  (regenerates calc/output/capstone_alternatives.md)
+    fig = plt.figure(figsize=(15, 8.6))
+    ax = fig.add_axes([0.0, 0.0, 0.64, 0.91])
+    ax.set_aspect("equal")
+    ax.axis("off")
+    A = m3.Axo(26.0, 20.0)
+    X, Yp, Z, TH = 360.0, 0.0, 20.0, -30.0       # head over the pan, lane y = 0 (pan moved in Y)
+    PX0, PX1, PW, PH = 120.0, 480.0, 165.0, 120.0
+    PY = -50.0                                   # pan slid in Y so that its lane 0 is under the fixed stem
+    # floor + bench
+    ax.add_patch(Polygon(A.pts([(-380, -420, -1000), (1250, -420, -1000), (1250, 420, -1000), (-380, 420, -1000)]),
+                         closed=True, fc="#EEF1F4", ec="none", zorder=0.5))
+    for lx in (-230, 1060):
+        for ly in (-270, 240):
+            A.box(lx, lx + 30, ly, ly + 30, -1000, -292, "#B9C2CA")
+    A.box(-250, 1100, -300, 300, -292, -262, "#D8C8A8", ec="#9c8a66")                   # bench top
+    # frame: two posts + cross beam (aluminium profile)
+    for x0 in (-150, 960):
+        A.box(x0, x0 + 40, 60, 100, -262, 760, m.C_ALU)
+    A.box(-150, 1000, 60, 140, 680, 760, m.C_ALU)                                            # 4080 cross beam
+    A.box(-150, -110, 60, 100, 300, 340, m.C_ALU)
+    # X ball-screw module on the beam front
+    A.box(-100, 950, 20, 60, 600, 680, "#5E6770", ec="#2d353d")
+    A.box(-100, -40, 10, 60, 610, 670, "#2E3A46")                                            # X motor
+    A.box(X - 80, X + 80, -10, 20, 580, 700, m.C_X, ec="#1E4E80")                            # X carriage plate
+    # Z module (vertical) on the X carriage, slider carries the head
+    A.box(X - 35, X + 35, -40, -10, 180, 640, "#6d5aa8", ec="#3f3170")                        # Z module body
+    A.box(X - 20, X + 20, -40, -10, 640, 690, "#2E3A46")                                     # Z motor + brake
+    sb = Z + m.STEM + m.HEAD - 100.0 + 100.0                                                 # slider bottom = C + 200 + 100
+    sb = Z + 200.0 + m.HEAD
+    A.box(X - 45, X + 45, -60, -40, sb, sb + 110, m.C_Z_L, ec=m.C_Z)                          # Z slider plate
+    # head, dual push-rods, stem
+    A.box(X - 60, X + 60, -95, -5, Z + 200, Z + 200 + m.HEAD, m.C_HEAD, ec="#1b242e")
+    A.box(X - 10, X + 50, -145, -95, Z + 225, Z + 285, m.C_TH, ec="#8a4a00")                 # theta stepper + gearbox
+    A.box(X - 85, X + 85, -120, 20, Z + 195, Z + 200, m.C_FOOD, ec="#a86d00", lw=0.4)        # drip umbrella
+    A.box(X - 7.5, X + 7.5, -57.5, -42.5, Z + 4, Z + 195, "#D7DCE1", ec=m.C_FOOD)           # stem
+    for ph in (0.0, 90.0):
+        lx, lz = m.lever_tip(X, Z, TH + ph)
+        A.box(lx - 3.5, lx + 3.5, -53.5 - (ph / 90.0) * 12, -46.5 - (ph / 90.0) * 12, lz, lz + 195, "#E7C77F",
+              ec=m.C_FOOD, lw=0.4)
+    moving_y = -50.0
+    # pan, insulated holder, force platform, tub-side Y slide
+    A.box(PX0 - 70, PX1 + 70, PY - PW / 2 - 70, PY + PW / 2 + 70, -262 + 45, -262 + 70, m.C_Y, ec="#0f5a52")   # Y slide plate
+    A.box(PX0 - 40, PX1 + 40, -30, 30, -262, -262 + 45, "#16736A", ec="#0f5a52")                    # Y lead-screw base
+    A.box(PX1 + 40, PX1 + 90, -25, 25, -262, -262 + 45, "#2E3A46")                                  # Y motor
+    A.box(PX0 - 60, PX1 + 60, PY - PW / 2 - 60, PY + PW / 2 + 60, -262 + 70, -262 + 88, "#F1C4C6", ec=m.C_SENSOR)  # force platform
+    A.box(PX0 - 62, PX1 + 62, PY - PW / 2 - 62, PY + PW / 2 + 62, -262 + 88, 0, "#E9EEF3", ec="#9aa6b2")    # XPS holder
+    body = A.flush()
+    A.draw(ax, body, 2)
+    # pan opening with ice cream (flat) and the three lanes
+    rim = A.pts([(PX0, PY - PW / 2, 0), (PX1, PY - PW / 2, 0), (PX1, PY + PW / 2, 0), (PX0, PY + PW / 2, 0)])
+    op = Polygon(rim, closed=True, fc="#dcd6c9", ec="#6f6656", lw=1.0, zorder=3)
+    ax.add_patch(op)
+    ic = Polygon(A.pts([(PX0, PY - PW / 2, -20), (PX1, PY - PW / 2, -20), (PX1, PY + PW / 2, -20), (PX0, PY + PW / 2, -20)]),
+                 closed=True, fc="#EFDDA6", ec="none", zorder=3.1)
+    ax.add_patch(ic)
+    ic.set_clip_path(op)
+    lx0, lx1 = 300 - 135, 300 + 135
+    for yl in (-38.0, 0.0, 38.0):
+        q = A.pts([(lx0, PY + yl, -20), (lx1, PY + yl, -20)])
+        ln, = ax.plot(q[:, 0], q[:, 1], color=m.C_Y, lw=1.6, ls=(0, (4, 2)), zorder=3.2)
+        ln.set_clip_path(op)
+    # cup holder column + cup
+    A.box(640, 760, -60, 60, -262, -5, "#DCE3E8", ec="#8E9AA5")
+    A.draw(ax, A.flush(), 3.3)
+    ax.add_patch(Polygon(A.rim_ellipse(700, 0, 0, 40), closed=True, fc="white", ec="#8E9AA5", lw=0.9, zorder=3.4))
+    # moving head parts above everything else in the pan area
+    m3.draw_scoop3d(ax, A, X, -50.0, Z, TH, zorder=6)
+    # guards + e-stop + pendant
+    G = [(-200, -320, -262), (1050, -320, -262), (1050, -320, 800), (-200, -320, 800)]
+    ax.add_patch(Polygon(A.pts(G), closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.8, alpha=0.08, zorder=8))
+    es = A.proj((1020, -320, -150))
+    ax.add_patch(Circle(es[:2], 24, fc="#FFD400", ec="#333", lw=0.6, zorder=9))
+    ax.add_patch(Circle(es[:2], 15, fc="#D0021B", ec="none", zorder=9.1))
+    pd = A.pts([(-120, -330, -230), (-40, -330, -230), (-40, -330, -120), (-120, -330, -120)])
+    ax.add_patch(Polygon(pd, closed=True, fc="#26313d", ec="#111", lw=0.6, zorder=9))
+    # axis arrows
+    def arr(p0, p1, lab, col, at=1.0, off=(0, 0)):
+        a_, b_ = A.proj(p0)[:2], A.proj(p1)[:2]
+        ax.add_patch(FancyArrowPatch(a_, b_, arrowstyle="<|-|>", mutation_scale=13, lw=2.2, color=col, zorder=12))
+        ax.text(a_[0] + (b_[0] - a_[0]) * at + off[0], a_[1] + (b_[1] - a_[1]) * at + off[1], lab, color="white",
+                fontsize=11, fontweight="bold", ha="center", va="center", zorder=13,
+                bbox=dict(fc=col, ec=col, boxstyle="round,pad=0.2"))
+    arr((X - 170, -15, 730), (X + 170, -15, 730), "X", m.C_X, 1.0, (26, 0))
+    arr((X - 80, -50, Z + 330), (X - 80, -50, Z + 560), "Z", m.C_Z, 0.5, (-26, 0))
+    arr((PX0 - 90, PY - PW / 2 - 60, -262 + 60), (PX0 - 90, PY + PW / 2 + 60, -262 + 60), "Y", m.C_Y, 0.0, (-24, -8))
+    m3.draw_triad(ax, A, (A.proj((-380, -420, -1000))[0] + 40, A.proj((-380, -420, -1000))[1] + 30), L=110, fs=8)
+
+    calls = [
+        (1, (400, 100, 720)), (2, (X, -10, 640)), (3, (X - 35, -40, 400)), (4, (X + 50, -145, Z + 255)),
+        (5, (X + 7, -50, Z + 100)), (6, (PX1, PY - PW / 2, -40)), (7, (PX0 - 62, PY - PW / 2 - 62, -120)),
+        (8, (PX1 + 60, PY - PW / 2 - 60, -262 + 80)), (9, (PX1 + 70, PY - PW / 2 - 70, -262 + 55)), (10, (700, -60, -150)),
+        (11, (-80, -330, -175)), (12, (1020, -320, -150)), (13, (960, 60, 400)),
+    ]
+    anchors = {n: A.proj(p3)[:2] for n, p3 in calls}
+    P = A.pts([(x, y, z) for x in (-380, 1250) for y in (-420, 420) for z in (-1000, 800)])
+    x_lo, x_hi, y_lo, y_hi = P[:, 0].min(), P[:, 0].max(), P[:, 1].min(), P[:, 1].max()
+    mid = 0.5 * (x_lo + x_hi)
+    left = sorted([n for n in anchors if anchors[n][0] < mid], key=lambda n: -anchors[n][1])
+    right = sorted([n for n in anchors if anchors[n][0] >= mid], key=lambda n: -anchors[n][1])
+    for side, col_x in ((left, x_lo - 120), (right, x_hi + 120)):
+        ys = [anchors[n][1] for n in side]
+        for i in range(1, len(ys)):
+            ys[i] = min(ys[i], ys[i - 1] - 115)
+        for i in range(len(ys) - 2, -1, -1):
+            ys[i] = max(ys[i], ys[i + 1] + 115)
+        shift = max(0.0, max(ys) - (y_hi - 30))
+        for n, ty in zip(side, [y - shift for y in ys]):
+            ax_, ay_ = anchors[n]
+            ax.plot([ax_, col_x], [ay_, ty], color="#44505b", lw=0.7, zorder=20)
+            ax.add_patch(Circle((ax_, ay_), 8, fc="#1F2A36", ec="none", zorder=20))
+            ax.add_patch(Circle((col_x, ty), 38, fc="#1F2A36", ec="white", lw=1.0, zorder=21))
+            ax.text(col_x, ty, str(n), color="white", ha="center", va="center", fontsize=9, fontweight="bold", zorder=22)
+    ax.set_xlim(x_lo - 180, x_hi + 180)
+    ax.set_ylim(y_lo - 20, y_hi + 40)
+
+    lg = fig.add_axes([0.645, 0.04, 0.345, 0.87])
+    lg.axis("off")
+    lg.set_xlim(0, 1)
+    lg.set_ylim(0, 1)
+    items = [
+        ("알루미늄 프로파일 프레임", "4040·4080 볼트 조립. 용접·가공 없음"),
+        ("X 볼스크류 모듈 + 캐리지  [X]", "상용 모듈(이중 레일), 행정 ~700 mm, NEMA23 폐루프"),
+        ("Z 볼스크류 모듈  [Z]", "행정 ~250 mm(얕은 팬), 브레이크 + 가스스프링"),
+        ("θ 스테퍼 + 1:27 유성기어  [θ]", "G-code A축으로 구동, 이중 push-rod(90° 위상) → 360°"),
+        ("식품 모듈 (PoC)", "매장 스쿱 + Ø30 스템(볼트 캡·실리콘) + push-rod 2개"),
+        ("젤라토 팬 360×165×120", "직선 벽 → 모든 레인 270 mm, 1 portion 깊이 ~15 mm"),
+        ("단열 팬 홀더 (XPS 50 mm)", "냉동고 밖에서 수십 분 시험, 시험 사이 뚜껑"),
+        ("팬 힘 플랫폼", "단일점 20 kg + S-빔(X) + HX711: 접촉·F_x·F_z·portion 질량"),
+        ("통 쪽 Y 슬라이드  [Y]", "T8 리드스크류, 팬을 레인 위치로 옮김(±38 mm)"),
+        ("컵 받침 + 빗", "3D 프린트 받침, 304 와이어 빗(배출 시험)"),
+        ("hold-to-run 펜던트", "V1-S 시험은 작업자 입회 + 누르고 있을 때만 동작"),
+        ("E-stop + 안전 릴레이", "정지범주 0, 드라이버 enable 차단"),
+        ("가드 패널", "폴리카보네이트 3면, 문 1개 인터록"),
+    ]
+    lg.text(0.0, 0.99, "V1-S 구성 (학생 제작형)", fontsize=13, fontweight="bold", va="top", color=m.C_TEXT)
+    for i, (a_, b_) in enumerate(items):
+        y = 0.935 - i * 0.066
+        lg.add_patch(Circle((0.025, y - 0.012), 0.018, fc="#1F2A36", ec="none", transform=lg.transAxes))
+        lg.text(0.025, y - 0.012, str(i + 1), color="white", ha="center", va="center", fontsize=7.5, fontweight="bold")
+        lg.text(0.065, y, a_, fontsize=9.3, va="top", color=m.C_TEXT, fontweight="bold")
+        lg.text(0.065, y - 0.028, b_, fontsize=8.2, va="top", color="#51606e")
+    fig.text(0.012, 0.965, "V1-S — 학부 종합설계로 만들 수 있게 바꾼 시제품", fontsize=16, fontweight="bold", color=m.C_TEXT)
+    fig.text(0.012, 0.937, "원형 통 대신 직사각 팬, 강관 가공 대신 상용 모듈, 너트 로드셀 대신 팬 힘 플랫폼, 냉동고 위 갠트리 대신 단열 홀더. "
+             "BOM 추정 ~291만 원(빌리면 ~249만 원)", fontsize=9.5, color="#51606e")
+    save(fig, "fig7_v1s_student_rig.png")
+
+
+# =====================================================================================
+# Fig 8 — alternatives, quantified
+# =====================================================================================
+def fig_alternatives():
+    import capstone_alternatives as ca
+    import tub_lane_planner as tlp
+    import scoop_load_path as sl
+    fig = plt.figure(figsize=(15, 9.4))
+    fig.text(0.012, 0.968, "대체안 정량 비교 — 무엇이 바뀌면 무엇이 쉬워지나", fontsize=15, fontweight="bold", color=m.C_TEXT)
+    fig.text(0.012, 0.942, "calc/capstone_alternatives.py · 하중·재료·열 물성은 가정값", fontsize=9.5, color="#51606e")
+    C1, C2, C3 = "#2F6FB0", "#1F9A8A", "#7A5CC2"
+
+    # (a) containers
+    a = fig.add_axes([0.03, 0.53, 0.44, 0.36])
+    a.set_aspect("equal")
+    a.axis("off")
+    a.add_patch(Circle((0, 0), 115, fc="#EFDDA6", ec="#6f6656", lw=1.0))
+    for yl in (-40.0, 0.0, 40.0):
+        L = tlp.lane_length(abs(yl), 62.0, 24.0)
+        a.annotate("", xy=(L / 2, yl), xytext=(-L / 2, yl), arrowprops=dict(arrowstyle="-|>", color=C2, lw=1.8))
+        a.text(L / 2 + 6, yl, f"{L:.0f}", fontsize=8.5, va="center")
+    a.text(0, -135, "원형 통 Ø230: 가운데 133 mm, 옆 106 mm\n1 portion d ≈ 25 mm, F ≈ 115 N @ 90 kPa\n옆 레인은 1 portion 불가",
+           ha="center", va="top", fontsize=8.8)
+    ox = 330
+    a.add_patch(Rectangle((ox - 180, -82.5), 360, 165, fc="#EFDDA6", ec="#6f6656", lw=1.0))
+    lx, ymax = ca.pan_lane(ca.PAN)
+    for yl in (-ymax, 0.0, ymax):
+        a.annotate("", xy=(ox + lx / 2, yl), xytext=(ox - lx / 2, yl), arrowprops=dict(arrowstyle="-|>", color=C2, lw=1.8))
+    a.text(ox + lx / 2 + 6, 0, f"{lx:.0f}", fontsize=8.5, va="center")
+    d_pan = ca.depth_for_volume(lx)
+    a.text(ox, -135, f"젤라토 팬 360×165: 모든 레인 {lx:.0f} mm\n1 portion d ≈ {d_pan[0]:.0f} mm, F ≈ {0.09 * d_pan[1]:.0f} N @ 90 kPa",
+           ha="center", va="top", fontsize=8.8)
+    a.set_xlim(-140, 540)
+    a.set_ylim(-190, 125)
+    a.set_title("(a) 용기 — 직선 벽이면 레인이 모두 길다 (화살표 = 피벗 C 이동)", fontsize=10, fontweight="bold", loc="left")
+
+    # (b) push-rod force vs lever angle
+    b = fig.add_axes([0.56, 0.56, 0.41, 0.32])
+    phi = np.linspace(-180, 180, 721)
+    tau, l = 7.0, 0.025
+    with np.errstate(divide="ignore"):
+        single = np.abs(tau / (l * np.cos(np.radians(phi))))
+    single[np.abs(np.cos(np.radians(phi))) < 0.02] = np.nan
+    dual = np.maximum(np.abs(tau * np.cos(np.radians(phi)) / l), np.abs(tau * np.sin(np.radians(phi)) / l))
+    b.plot(phi, single, color=C1, lw=2)
+    b.plot(phi, dual, color=C2, lw=2)
+    b.axvspan(-60, 60, color="#E8EDF2", lw=0, zorder=0)
+    b.text(0, 1420, "단일 링크 사용 범위 ±60°", ha="center", fontsize=8, color="#51606e")
+    b.text(118, 900, "단일 평행링크\n(±90°에서 사점)", color=C1, fontsize=8.5)
+    b.text(-175, 110, "이중 push-rod 90° 위상: 최대 280 N, 360° 가능", color=C2, fontsize=8.5,
+           bbox=dict(fc="white", ec="none", pad=1))
+    b.set_ylim(0, 1500)
+    b.set_xlim(-180, 180)
+    b.set_xticks(range(-180, 181, 60))
+    b.set_xlabel("레버각 φ [°]  (φ = θ − 30°)", fontsize=9)
+    b.set_ylabel("로드 최대 축력 [N] @ 7 N·m", fontsize=9)
+    b.tick_params(labelsize=8)
+    b.grid(color=m.C_GRID, lw=0.5)
+    for sp in ("top", "right"):
+        b.spines[sp].set_visible(False)
+    b.set_title("(b) 피치 구동 — 이중 push-rod면 뒤집기(θ = −90°) 배출이 가능", fontsize=10, fontweight="bold", loc="left")
+
+    # (c) warm-up of the insulated holder
+    c = fig.add_axes([0.05, 0.08, 0.40, 0.33])
+    t = np.linspace(0, 120, 241)
+    mass = ca.MASS
+    for top, col, lab in ((False, C1, "뚜껑 열림"), (True, C2, "시험 사이 뚜껑 덮음")):
+        q_wall = ca.K_XPS * ca.A_WALL * (ca.T_AIR - ca.T_IC) / ca.T_WALL
+        q_top = (ca.K_XPS * ca.A_OPEN * (ca.T_AIR - ca.T_IC) / 0.03) if top else ca.H_OPEN * ca.A_OPEN * (ca.T_AIR - ca.T_IC)
+        q = q_wall + q_top
+        lo = -14 + q * t * 60 / (mass * 6000.0)
+        hi = -14 + q * t * 60 / (mass * 3000.0)
+        c.fill_between(t, lo, hi, color=col, alpha=0.25, lw=0)
+        c.plot(t, (lo + hi) / 2, color=col, lw=1.8)
+        if top:
+            c.text(t[-1] + 2, (lo[-1] + hi[-1]) / 2, lab, color=col, fontsize=8.5, va="center")
+        else:
+            c.text(50, -9.35, lab, color=col, fontsize=8.5, va="center")
+    c.axhline(-12, color="#34495e", lw=0.8, ls="--")
+    c.text(1, -11.85, "−14 + 2 K (판정 한계)", fontsize=8, color="#34495e", va="bottom")
+    c.set_xlim(0, 150)
+    c.set_ylim(-14.5, -9)
+    c.set_xlabel("꺼낸 뒤 시간 [분]", fontsize=9)
+    c.set_ylabel("아이스크림 온도 [°C]", fontsize=9)
+    c.tick_params(labelsize=8)
+    c.grid(color=m.C_GRID, lw=0.5)
+    for sp in ("top", "right"):
+        c.spines[sp].set_visible(False)
+    c.set_title("(c) 단열 홀더(XPS 50 mm) — 띠 = 겉보기 비열 가정 범위", fontsize=10, fontweight="bold", loc="left")
+
+    # (d) tip deflection vs force at V1 and V1-S levers
+    d = fig.add_axes([0.56, 0.08, 0.41, 0.33])
+    Fs = np.linspace(0, 200, 41)
+    for key, col, lab in (("L", C1, "3D 프린터식"), ("M", C2, "보강 프로파일"), ("S30", C3, "강관 + Ø30")):
+        cfg = sl.CONFIGS[key]
+        v1 = [sum(sl.tip_dx(cfg, F, cm.z_min(), 1).values()) for F in Fs]
+        saved = (cm.STEM_LEN, sl.H_BLOCK)
+        cm.STEM_LEN, sl.H_BLOCK = ca.STEM_S, ca.H_BLOCK_S
+        vs = [sum(sl.tip_dx(cfg, F, ca.C_MIN_S, 1).values()) for F in Fs]
+        cm.STEM_LEN, sl.H_BLOCK = saved
+        d.plot(Fs, v1, color=col, lw=1.2, ls="--")
+        d.plot(Fs, vs, color=col, lw=2.0)
+        d.text(Fs[-1] + 3, min(vs[-1], 5.6), lab, color=col, fontsize=8.5, va="center")
+    d.axhline(1.0, color=m.C_SENSOR, lw=0.8)
+    d.text(2, 1.05, "목표 1 mm", fontsize=8, color=m.C_SENSOR, va="bottom")
+    d.axvspan(0, 60, color="#E8EDF2", lw=0, zorder=0)
+    d.text(30, 5.5, "팬: F ≈ 56 N\n@ 90 kPa", ha="center", fontsize=8, color="#51606e")
+    d.set_xlim(0, 235)
+    d.set_ylim(0, 6)
+    d.set_xlabel("드래그 힘 F_x [N]", fontsize=9)
+    d.set_ylabel("스쿱 끝 변위 [mm]", fontsize=9)
+    d.tick_params(labelsize=8)
+    d.grid(color=m.C_GRID, lw=0.5)
+    for sp in ("top", "right"):
+        d.spines[sp].set_visible(False)
+    d.set_title(f"(d) 강성 — 실선: V1-S 레버 {ca.geo_s[2]:.0f} mm, 점선: V1 레버 {ca.geo_v1[2]:.0f} mm", fontsize=10,
+                fontweight="bold", loc="left")
+    save(fig, "fig8_alternatives_quantified.png")
+
+
 if __name__ == "__main__":
     fig_axonometric()
     fig_three_view()
@@ -728,3 +1000,5 @@ if __name__ == "__main__":
     fig_sequence()
     fig_load_path()
     fig_y_axis()
+    fig_v1s()
+    fig_alternatives()

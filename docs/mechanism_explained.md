@@ -125,11 +125,19 @@ Z_M은 항상 **스쿱 피벗 C의 높이**다. 스쿱의 모든 점은 C에서 
 - 스쿱 끝 변위 @ 200 N: 3D 프린터식 10.9 mm, 보강 프로파일 2.2 mm, 강관 + Ø25 스템 1.4 mm, **강관 + Ø30 스템(채택) 0.99 mm**. 가장 큰 기여는 스템(0.49)과 Z 기둥(0.32)이다.
 - 설계 규칙: 드래그 방향 = 빔 축(비틀림 없음), 로드셀은 볼너트에 축방향으로만(모멘트 경로 밖), 조립 후 스쿱 끝 강성을 추로 직접 잰다.
 
+## 5-A. 학생 제작형 V1-S와 대체안
+
+![V1-S](../media/fig7_v1s_student_rig.png)
+
+![대체안 정량 비교](../media/fig8_alternatives_quantified.png)
+
+학부 팀이 만들 수 있게 바꾼 구성과 그 근거는 [`capstone_challenges_and_alternatives.md`](capstone_challenges_and_alternatives.md)에 있다.
+
 ## 6. 그림·영상 다시 만들기
 
 ```bash
 pip install numpy matplotlib koreanize-matplotlib imageio-ffmpeg
-python3 media/make_figures.py             # fig1–fig6 (PNG)
+python3 media/make_figures.py             # fig1–fig8 (PNG)
 python3 media/make_operation_video_3d.py  # operation_3d.mp4 + .gif (약 5분)
 python3 media/make_operation_video.py     # operation.mp4 + .gif (정면 상세, 약 2–3분)
 ```

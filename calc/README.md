@@ -16,6 +16,7 @@ python3 calc/z_axis_sizing.py           # Z 행정·counterbalance·브레이크
 python3 calc/tub_lane_planner.py        # 통 벽 keep-out, 레인 길이, 1 portion 깊이, 통당 portion
 python3 calc/cycle_time_estimate.py     # 사이클타임 분해와 시나리오 범위
 python3 calc/scoop_mechanism_compare.py # 끌기-말기 vs 클램셸: 통을 얼마나 쓰는가(5 mm 격자)
+python3 calc/capstone_alternatives.py   # 학부 제작형 V1-S: 팬 vs 통, 레버·강성, 이중 push-rod, 단열 홀더, 힘 플랫폼, 펌웨어 지연
 ```
 
 결과는 `calc/output/`에 markdown/PNG로 생성된다. Legacy 결과는 docs/11, 13, 14, 15에서, Cartesian 결과는 `docs/final_system_concept.md`와 각 Cartesian 문서에서 인용한다.
@@ -40,3 +41,4 @@ python3 calc/scoop_mechanism_compare.py # 끌기-말기 vs 클램셸: 통을 얼
 | `tub_lane_planner.py` | 통 안에서 레인이 얼마나 길고, 1 portion에 몇 mm가 필요한가 | 통 치수, u(T) |
 | `cycle_time_estimate.py` | 사이클 시간은 어디에 쓰이나 | 축 속도·가속도, 체류시간 |
 | `scoop_mechanism_compare.py` | 스쿠핑 원리별로 통을 바닥까지 쓸 수 있나 | 통 치수, 힘 예산(깊이 한계), 턱 발자국 |
+| `capstone_alternatives.py` | 학부 팀이 만들 수 있게 바꾸면 무엇이 쉬워지나 | 팬 치수, 모듈 강성, 겉보기 비열, 로드셀 분해능, 호스트 지연 |
