@@ -1,5 +1,7 @@
 # 학부 종합설계에서 부딪힐 난관 — 해결책, 대체 메커니즘, V1-S로 현실화
 
+> **2026-09-28 갱신: 예산 상한이 100만 원(R8)으로 정해져 V1-S(~291만 원)는 [`v1l_budget_prototype.md`](v1l_budget_prototype.md)의 V1-L로 대체되었다.** 이 문서의 난관 목록(D1–D14)과 대체안 판정은 그대로 유효하고, V1-L은 여기에 이동 베드·합판 브리지·수동 레인·GRBL + 노트북을 더한 것이다. D1(예산)의 해결책은 V1-L 문서 §7을 따른다.
+
 > 지금 설계(Cartesian V1, `final_system_concept.md`)는 공학적으로는 맞지만 **학부 팀(4–5명, 2학기, 수백만 원, 학교 공작실)** 이 그대로 만들기에는 무리한 부분이 있다. 이 문서는 그 난관을 하나씩 짚고, 해결책과 대체 메커니즘을 비교한 뒤, 채택한 것을 모아 **V1-S(학생 제작형) 시제품**으로 구체화한다.
 > 숫자: `calc/output/capstone_alternatives.md`, `calc/output/tub_lane_planner.md` §4. BOM: `BOM/capstone_v1s.csv`. 그림: `media/fig7_v1s_student_rig.png`, `media/fig8_alternatives_quantified.png`. **하중·재료·열 물성·가격은 모두 가정·추정값이다.**
 

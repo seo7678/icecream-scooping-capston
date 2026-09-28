@@ -106,7 +106,20 @@
 | 4 (안전) | 컵 베이 존재감지 PL | 작업자가 하루 수백 번 접근(F2). V1의 일반 광전 센서는 PL c–d 요구를 못 채울 수 있음 | V1은 명시하고 시험. 제품은 안전 등급 라이트 커튼 |
 | 5 (가치) | 사람보다 느릴 수 있음 | 기계 11–23 s. 숙련자 손 스쿠핑 시간은 아직 측정 안 됨(P0-1) | 가치를 속도가 아니라 작업자 점유 시간으로 측정. 피크 처리량이 중요한 매장에는 권하지 않음 |
 
-## 6. 첫 시제품 — V1-S(학생 제작형)로 갱신 (2026-09)
+## 6. 첫 시제품 — V1-L(예산 100만 원)로 갱신 (2026-09-28)
+
+> **예산 상한 100만 원(R8)에 맞춰 첫 시제품을 V1-L로 바꿨다.** 근거·예산·시험 계획은 [`v1l_budget_prototype.md`](v1l_budget_prototype.md).
+>
+> 요약:
+> - 이동 베드(팬이 X로 드래그) + 18T 합판 고정 브리지(Z·θ), Y 레인은 수동 인덱스 핀 + 레인 스위치 3개
+> - TR8 리드스크류 + NEMA17(X 리드 4, Z 리드 2 자립), θ NEMA17 + 1:27, 스쿱 끝 변위 0.52 / 0.92 mm @ 56 / 100 N(가정, 조립 후 교정 조건부)
+> - GRBL 1.1h(Uno) + 노트북 Python + Nano(HX711 ×2, 80 SPS), 끊기면 멈추는 허가선·프로브선, 선로 단락 검출
+> - 권장 조합 총액 추정 ~98만 원(학교 공작실·필라멘트 전제, 예비비 10만 포함). 전제 없이 사면 ~109만 원
+> - 아이스크림 4 L 3통, E0 20 스트로크, θ 모터는 E0 뒤 주문
+>
+> 아래 V1-S는 예산 초과(~291만 원)로 대체되었지만, 예산이 늘면 돌아갈 구성으로 남긴다.
+
+### 6.0 (대체됨) V1-S 학생 제작형
 
 > **학부 종합설계 수준의 난관(예산·가공·펌웨어·냉각·배출)을 반영해 첫 시제품을 V1-S로 바꿨다.** 자세한 근거와 대체안 비교는 [`capstone_challenges_and_alternatives.md`](capstone_challenges_and_alternatives.md).
 >
@@ -190,6 +203,6 @@
 | 10 | 예상 사이클 | 기계 14.5 s(11.1–22.7), 작업자 ~3 s, 140–256 스쿱/h(추정) |
 | 11 | 가장 큰 기계 위험 | 실측되지 않은 절삭력이 ~0.8 m 레버로 구조·Z·θ에 걸림 → E0 먼저 |
 | 12 | 가장 큰 선행기술 위험 | Dexai US11597084B2(상태별 토크 한계, 등록) FTO. 신규성 측면에서는 Columbia 스쿠핑 로봇 + 갠트리 계량 식품 장치(US11969878) 조합의 자명성 |
-| 13 | 첫 시제품 | E0 확장(기계 없이) → **V1-S 학생 제작형**(젤라토 팬·상용 모듈·팬 힘 플랫폼, ~291만 원) → V1b 여러 통 자동 사이클 |
+| 13 | 첫 시제품 | E0(힘 플랫폼 지그, 1–3주) → **V1-L 예산 100만 원**(이동 베드 + 합판 브리지, 수동 레인, GRBL + 노트북, 추정 ~98만 원·학교 자원 전제) → V1b 여러 통 자동 사이클. V1-S(~291만 원)는 예산 초과로 대체 |
 | 14 | 수정·생성 파일 | 신규: docs 14(이 문서 포함), calc 스크립트 7 + 출력, firmware 2, cad 2, BOM 1, research/components.md. 수정: concept_brief 전면 개정(Cartesian 기준), Legacy 문서 배너(00, 04, 11–14, 16, 17, 20, 23, 24), research/patents.md §5, P0-3 프로토콜 §7, README, calc/README, firmware/README |
 | 15 | 커밋 | design: replace manual positioning with Cartesian gantry / analysis: size gantry and Z axis / design: define XYZ and local scoop architecture / analysis: re-select scooping principle / control: add flavor coordinate and state machine / safety: add collision and hygiene architecture / research: recheck robotic prior art / docs: publish updated final concept |

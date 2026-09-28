@@ -133,6 +133,12 @@ Z_M은 항상 **스쿱 피벗 C의 높이**다. 스쿱의 모든 점은 C에서 
 
 학부 팀이 만들 수 있게 바꾼 구성과 그 근거는 [`capstone_challenges_and_alternatives.md`](capstone_challenges_and_alternatives.md)에 있다.
 
+## 5-B. 예산 100만 원 시제품 V1-L
+
+![V1-L](../media/fig9_v1l_budget_rig.png)
+
+V1-S도 예산(100만 원)을 넘어서, 팬이 움직이는 **이동 베드**와 **합판 고정 브리지**로 다시 설계했다. 헤드는 Z와 θ만 움직이고, 드래그는 베드(X)가 한다. 레인은 손으로 핀을 옮겨 바꾼다. 근거·예산·시험 계획은 [`v1l_budget_prototype.md`](v1l_budget_prototype.md).
+
 ## 6. 그림·영상 다시 만들기
 
 ```bash

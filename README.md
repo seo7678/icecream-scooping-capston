@@ -4,7 +4,9 @@
 
 > **한 문서로 보기(문제 → 기존 해결책·특허와 한계 → 아이디어 → 구조와 메커니즘):** [`docs/concept_brief.md`](docs/concept_brief.md)
 >
-> **학부 종합설계 난관과 대체 메커니즘 → 학생 제작형 V1-S:** [`docs/capstone_challenges_and_alternatives.md`](docs/capstone_challenges_and_alternatives.md) (BOM `BOM/capstone_v1s.csv`, ~291만 원)
+> **예산 100만 원 시제품 V1-L(현재 첫 시제품):** [`docs/v1l_budget_prototype.md`](docs/v1l_budget_prototype.md) — 이동 베드 + 합판 브리지, 수동 레인, GRBL + 노트북. BOM `BOM/v1l_under_1m.csv`(권장 조합 총액 추정 ~98만 원, 학교 자원 전제)
+>
+> **학부 종합설계 난관과 대체 메커니즘 → 학생 제작형 V1-S:** [`docs/capstone_challenges_and_alternatives.md`](docs/capstone_challenges_and_alternatives.md) (BOM `BOM/capstone_v1s.csv`, ~291만 원 — 예산 초과로 V1-L로 대체)
 >
 > **구조도 · 메커니즘 설명 · 작동 동영상:** [`docs/mechanism_explained.md`](docs/mechanism_explained.md) (그림·영상 원본은 `media/`)
 >
@@ -85,12 +87,13 @@
 | `research/` | 근거 원장: papers, patents(§5 Cartesian 재검색), products, standards, components(카탈로그 값), open_questions |
 | `data/` | `assumptions.md` — 모든 가정값 대장(ID, 민감도, 측정 방법) |
 | `calc/` | 재현 가능한 계산·시뮬레이션(`python3 calc/*.py`), 출력은 `calc/output/` |
-| `BOM/` | `capstone_v1s.csv` — 학생 제작형 V1-S 31개 항목(~291만 원) / `cartesian_prototype_v1.csv` — Cartesian V1 44개 항목 / `prototype_v1.csv` — Legacy V1 rig |
+| `BOM/` | `v1l_under_1m.csv` — 예산 100만 원 V1-L(경로별 합계 행, 가격 상태 snippet/estimate) / `capstone_v1s.csv` — 학생 제작형 V1-S 31개 항목(~291만 원) / `cartesian_prototype_v1.csv` — Cartesian V1 44개 항목 / `prototype_v1.csv` — Legacy V1 rig |
 | `experiments/` | 프로토콜(P0-2, P0-3), 기록 템플릿 |
 | `cad/` | `cartesian_layout.md`, `scooping_head_layout.md` — 배치·높이·치수 |
 | `media/` | 구조도(축측·3면도), 메커니즘 그림, 작동 동영상(MP4·GIF)과 생성 스크립트 |
 | `firmware/` | `state_machine.md`(전이표·가드·Z_SAFE 게이트), `coordinate_map_example.md`(맛 좌표 JSON·레인 선택) |
 | `prompts/`, `references/` | 이전 작업 프롬프트, 참고문헌 색인 |
+| `_chief/` | 프로젝트 기억(요구사항 R1–R9, 결정 로그, 위험, 회의록)과 담당별 작업 산출물 `work/`(기계·전자·제어·시험·Red Team) |
 
 ## 핵심 KPI
 
