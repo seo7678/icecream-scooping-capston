@@ -5,6 +5,8 @@
     python3 host_skeleton.py --mock --scenario overload   # 드래그 중 단단한 덩어리 → 정지 → FAULT → 복구
     python3 host_skeleton.py --mock --scenario hang       # 노트북 1 s 멈춤 → Nano 워치독 → 도어 hold → FAULT
     python3 host_skeleton.py --mock --scenario gate       # R7: 호스트 게이트 거부 + 게이트 우회 시 Nano 인터록
+    python3 host_skeleton.py --mock --scenario short      # 드래그 중 허가선(A1) GND 단락 + 발판 뗌 → 불일치 검출 → '!'·0x18·E-stop
+    python3 host_skeleton.py --mock --scenario short_pre  # 프로브선(A5) GND 단락 상태로 시작 → 사이클 전 선로 자가시험에서 검출
     python3 host_skeleton.py --grbl /dev/ttyACM0 --nano /dev/ttyUSB0   # 실제 하드웨어 (pyserial 필요, 미검증)
 
 구조
@@ -16,6 +18,7 @@
 
 Nano 힘 보드 프로토콜 (115200 baud, 줄 단위) — 펌웨어는 아직 없음, 이 파일의 MockNanoPort가 기준 동작
     Nano → 호스트 :  F,<ms>,<Fx N>,<Fz N>,<flags>        80 SPS
+                     (Nano는 A6·A7 아날로그 입력으로 A1(허가선)·A5(프로브선) 전압을 되읽는다 → FL_LINE_FAULT)
     호스트 → Nano :  H          하트비트 (100 ms마다)
                      T          영점(tare)
                      P1 / P0    프로브 출력 무장/해제 (무장 중 Fz ≥ 3 N → GRBL 프로브 핀 트리거)
@@ -27,7 +30,7 @@ Nano 힘 보드 프로토콜 (115200 baud, 줄 단위) — 펌웨어는 아직 �
     flags 비트: 아래 FL_* 상수.
 
 모든 수치는 ASSUMPTION(`v1l_control.md`, `v1l_control_sim_output.md`). GRBL 동작 중 '확인 필요' 항목은
-mock이 가정대로 흉내 낼 뿐이며, 실제 보드에서 T-시험(문서 §7)으로 확인해야 한다.
+mock이 가정대로 흉내 낼 뿐이며, 실제 보드에서 T-시험(문서 §10)으로 확인해야 한다.
 """
 
 from __future__ import annotations
@@ -58,6 +61,9 @@ class Cfg:
     X_CUP = 471.0              # 컵 중심 = 팬 360 + 홀더 벽 56 + 틈 10 + 컵 반경 45 (기계 담당)  # ASSUMPTION
     X_LIM = (25.0, 491.0)      # 소프트 리밋 ($130 = 466)                            # ASSUMPTION
     Z_TOP, Z_SAFE = 100.0, 60.0   # Z_SAFE = 테두리 + R + 25 (A31 방식)             # ASSUMPTION
+    Z_TRAVEL_MIN = 62.0        # 이송 허용 Z = Z_SAFE + 2 (Red Team L2)
+    Z_HIGH_ON = 60.5           # Z-높이 스위치 작동점: Z_SAFE + 0.5 (반복성 ±0.3 가정 → 항상 ≥ Z_SAFE)  # ASSUMPTION
+    Z_TRAVEL = 70.0            # 이송·인덱스 때 올리는 높이 (≥ Z_TRAVEL_MIN)
     Z_LIM = (-75.0, 100.0)     # C 최저 = 팬 바닥 −120 + 10 + R                     # ASSUMPTION
     TH_HOME, TH_ATTACK, TH_CAPTURE, TH_EJECT = 95.0, -30.0, 90.0, -120.0            # ASSUMPTION
     TH_LIM = (-150.0, 95.0)
@@ -70,18 +76,18 @@ class Cfg:
     V_PROBE = 5.0              # mm/s (v1l_control_sim §3.1)                          # ASSUMPTION
     V_DRAG = 30.0              # mm/s (v1l_control_sim §2.5)                          # ASSUMPTION
     V_TH = 150.0               # °/s                                                   # ASSUMPTION
-    A_X = 500.0                # mm/s²                                                 # ASSUMPTION
+    A_X = 500.0                # mm/s², $120 단일값 = 기계 문서 §4.4 이송 가속 0.5 m/s²      # ASSUMPTION
     PROBE_MARGIN, PROBE_OVERTRAVEL = 5.0, 15.0   # mm                                  # ASSUMPTION
     T_CLOSE = 0.8              # s (A32)                                               # ASSUMPTION
     T_SETTLE = 1.0             # s, 칭량 전 정착                                        # ASSUMPTION
 
-    # 힘 (F_DESIGN 150 N 가정, A37 비율 — v1l_control_sim §2.5)
+    # 힘 — 결정값(DECISIONS 2026-09-28): F_nominal 56, F_d 100, F_TARGET 82.5, 호스트 105, Nano 120 N
     F_TOUCH = 3.0
     F_TARGET = 82.5
     F_STOP_HOST = 105.0
     F_STOP_HW = 120.0
     F_TRAVEL = 30.0            # 이송·Z 이동 중 예상 밖 힘 = 충돌 의심
-    M_PLAT = 7.2               # kg, S-빔 위 질량(기계 담당 m_top) — 관성 여유용            # ASSUMPTION
+    M_PLAT = 7.2               # kg, X 셀 위 질량(기계 담당 m_top) — 관성 여유용            # ASSUMPTION
     INERTIA_MASK = 3.0         # mm, 드래그 시작 후 힘 평균에서 뺄 거리(가속+정착)        # ASSUMPTION
 
     # 깊이 제어
@@ -106,14 +112,24 @@ class Cfg:
     GRBL_TIMEOUT = 0.50        # s, 상태 응답 없음 → COMM 결함
     NANO_TIMEOUT = 0.20        # s, 힘 샘플 없음 → COMM 결함
     LOG_DECIM = 4              # 힘 샘플 4개 중 1개 기록 (20 Hz) + 모든 이벤트
+    LINE_SETTLE = 0.06         # s, Nano 기대 상태가 바뀐 뒤 GRBL Pn 대조를 쉬는 시간
+    LINE_MISMATCH_N = 2        # 연속 불일치 상태 보고 수 → 선로 결함 (≈ 100 ms)
+    T_OPERATOR = 120.0         # s, 작업자 조치(E-stop·핀) 대기 한계
 
 
 G = 9.81
 B_ATTACK = Cfg.R_SCOOP * math.cos(math.radians(30.0))    # rim 최저점이 C보다 30.3 mm 아래
 
-FL_TOUCH, FL_PERMIT, FL_OVERLOAD, FL_WATCHDOG = 1, 2, 4, 8
-FL_DEADMAN, FL_LANE_PIN, FL_Z_HIGH, FL_X_WIN, FL_INTERLOCK = 16, 32, 64, 128, 256
-LATCHES = {FL_OVERLOAD: "OVERLOAD_HW", FL_WATCHDOG: "WATCHDOG", FL_INTERLOCK: "INTERLOCK_R7"}
+FL_TOUCH, FL_PERMIT, FL_OVERLOAD, FL_WATCHDOG = 1, 2, 4, 8     # FL_PERMIT = Nano 허가 트랜지스터 ON(발판 제외)
+FL_DEADMAN, FL_LANE_PIN, FL_Z_HIGH, FL_X_WIN, FL_INTERLOCK = 16, 32, 64, 128, 256   # FL_LANE_PIN = 레인 스위치 정확히 1개
+FL_PROBE_ON, FL_LINE_FAULT, FL_ESTOP = 512, 1024, 2048   # 프로브 트랜지스터 ON(비접촉 무장), 선로 되읽기 래치, E-stop 눌림
+FL_LANES = {-38.0: 4096, 0.0: 8192, 38.0: 16384}         # 레인 스위치 3개(구멍마다 하나)
+LATCHES = {FL_OVERLOAD: "OVERLOAD_HW", FL_WATCHDOG: "WATCHDOG", FL_INTERLOCK: "INTERLOCK_R7",
+           FL_LINE_FAULT: "LINE_SHORT_READBACK"}
+
+
+def lanes_on(flags):
+    return [y for y, bit in FL_LANES.items() if flags & bit]
 
 
 # =====================================================================================
@@ -204,6 +220,13 @@ class RealRig:
     def operator_confirm(self, msg):
         return input(f"[작업자] {msg}  Enter=확인 / q=취소 > ").strip().lower() != "q"
 
+    def operator_action(self, kind, msg, **kw):
+        """실제 모드: 안내만 한다. 결과(E-stop·레인 스위치)는 호스트가 Nano 플래그로 확인한다."""
+        print(f"[작업자] {msg}")
+
+    def inject(self, what):
+        pass
+
     def summary(self):
         return {}
 
@@ -227,11 +250,9 @@ class GrblClient:
     def pump(self):
         for line in self.port.readlines():
             if line.startswith("<"):
-                m = self.STATUS_RE.match(line)
-                if m:
-                    self.st = {"state": m.group(1), "x": float(m.group(2)), "th": float(m.group(3)),
-                               "z": float(m.group(4)), "bf": int(m.group(5) or 0),
-                               "v": float(m.group(7) or 0.0) / 60.0}
+                st = self.parse_status(line)
+                if st:
+                    self.st = st
                     self.st_t = self.clock()
             elif line == "ok" or line.startswith("error:"):
                 self.acks.append(line)
@@ -243,6 +264,27 @@ class GrblClient:
                 self.prb = (x, th, z, ok)
             elif line.startswith("Grbl"):
                 self.banner = True
+
+    @staticmethod
+    def parse_status(line):
+        """'<Idle|MPos:x,y,z|Bf:15,128|FS:0,0|Pn:DP>' → dict. Pn은 활성 입력 핀(없으면 빈 문자열)."""
+        fields = line.strip().strip("<>").split("|")
+        st = {"state": fields[0], "x": 0.0, "th": 0.0, "z": 0.0, "bf": 0, "v": 0.0, "pn": ""}
+        ok = False
+        for fld in fields[1:]:
+            if ":" not in fld:
+                continue
+            key, val = fld.split(":", 1)
+            if key == "MPos":
+                st["x"], st["th"], st["z"] = (float(v) for v in val.split(","))
+                ok = True
+            elif key == "Bf":
+                st["bf"] = int(val.split(",")[0])
+            elif key == "FS":
+                st["v"] = float(val.split(",")[0]) / 60.0
+            elif key == "Pn":
+                st["pn"] = val
+        return st if ok else None
 
     def send_line(self, line):
         self.port.write((line + "\n").encode())
@@ -350,7 +392,15 @@ class MockGrblPort:
     def _status(self):
         x, th, z = self.pos
         bf = self.PLANNER - len(self.q) - (1 if self.cur else 0)
-        return f"<{self._state()}|MPos:{x:.3f},{th:.3f},{z:.3f}|Bf:{bf},{128 - len(self.rx)}|FS:{self.v*60:.0f},{self.feed:.0f}>"
+        pn = ("D" if self.door_open() else "") + ("P" if self.probe_trig() else "")   # 입력 핀의 실제 논리 상태
+        return (f"<{self._state()}|MPos:{x:.3f},{th:.3f},{z:.3f}|Bf:{bf},{128 - len(self.rx)}"
+                f"|FS:{self.v*60:.0f},{self.feed:.0f}" + (f"|Pn:{pn}" if pn else "") + ">")
+
+    def estop_reset(self):
+        """E-stop 보조 접점 → A0 리셋. 모터 전원도 끊기므로(K1) 호스트는 항상 재원점한다(mock은 원점 무효로 둠)."""
+        self._soft_reset()
+        self.homed = False
+        self.alarm = True
 
     # ---- 실시간 명령
     def _start_hold(self, kind):
@@ -622,7 +672,12 @@ class MockNanoPort:
         self.latch = 0
         self.lim = (cfg.F_STOP_HW, cfg.F_STOP_HW)
         self.deadman = True        # mock: 작업자가 hold-to-run을 누르고 있음
-        self.lane_pin = True
+        self.lane = -38.0          # 인덱스 핀이 꽂힌 구멍(None = 빠짐). 시작은 왼쪽 레인
+        self.estop = False         # E-stop 보조 접점 (K1 차단)
+        self.a1_short = False      # 허가선(A1) GND 단락 주입
+        self.a5_short = False      # 프로브선(A5) GND 단락 주입
+        self.rb_cnt = [0, 0]       # 되읽기 불일치 연속 샘플 수 (A1, A5)
+        self.readback = True       # A6·A7 되읽기 사용
         self.r7_override = False
         # 물리 상태
         self.engaged = False
@@ -672,20 +727,35 @@ class MockNanoPort:
 
     # ---- GRBL 쪽 하드웨어 출력
     def z_high(self):
-        return self.g.pos[2] >= self.cfg.Z_SAFE - 1.0          # 스위치 작동점 Z_SAFE − 1 mm   # ASSUMPTION
+        return self.g.pos[2] >= self.cfg.Z_HIGH_ON          # 스위치 작동점 Z_SAFE + 0.5 mm (L2)   # ASSUMPTION
 
     def x_win(self):
         return self.cfg.X_WIN[0] <= self.g.pos[0] <= self.cfg.X_WIN[1]
 
-    def permit(self):
-        return (self.permit_armed and self.latch == 0 and self.deadman and self.lane_pin
+    def lane_ok(self):
+        return self.lane is not None               # 3개 스위치 중 정확히 1개 ON
+
+    def transistor_on(self):
+        """Nano 허가 트랜지스터(D7 → NPN). 발판은 이것과 직렬인 별도 접점이다."""
+        return (self.permit_armed and self.latch == 0 and self.lane_ok() and not self.estop
                 and (self.z_high() or self.x_win() or self.r7_override))
 
+    def probe_on(self):
+        return self.probe_armed and not self.touch   # 프로브 트랜지스터(D6 → NPN) ON = 비접촉
+
     def door_open(self):
-        return not self.permit()               # INVERT: 풀업(무전원) = 도어 열림 = hold
+        """A1선의 실제 전압(HIGH = 도어 열림). INVERT: 풀업 = 열림, 발판 AND 트랜지스터가 닫혀야 LOW."""
+        if self.a1_short:
+            return False                            # GND 단락: 무엇을 해도 LOW(허가)
+        return not (self.transistor_on() and self.deadman)
 
     def probe_triggered(self):
-        return (not self.probe_armed) or self.touch   # $6=1: 풀업(무전원·미무장) = 트리거
+        if self.a5_short:
+            return False
+        return not self.probe_on()                  # $6=1: 풀업(무전원·미무장·접촉) = 트리거
+
+    def permit(self):
+        return not self.door_open()
 
     # ---- 물리
     def _raw(self):
@@ -761,11 +831,22 @@ class MockNanoPort:
                     self.r7_override = False
                 if not (self.z_high() or self.x_win() or self.r7_override):
                     self.latch |= FL_INTERLOCK
+            # 선로 되읽기(A6·A7): 트랜지스터가 꺼져 있거나 발판이 떨어졌으면 A1은 HIGH여야 한다.
+            # 프로브 트랜지스터가 꺼져 있으면 A5는 HIGH여야 한다. 2샘플(25 ms) 연속 LOW면 단락 래치.
+            exp_hi = ((not self.transistor_on()) or (not self.deadman), not self.probe_on())
+            line_hi = (self.door_open(), self.probe_triggered())
+            for i in range(2):
+                self.rb_cnt[i] = self.rb_cnt[i] + 1 if (exp_hi[i] and not line_hi[i]) else 0
+                if self.rb_cnt[i] >= 2 and self.readback:
+                    self.latch |= FL_LINE_FAULT
             fl = self.latch
             fl |= FL_TOUCH if self.touch else 0
-            fl |= FL_PERMIT if self.permit() else 0
+            fl |= FL_PERMIT if self.transistor_on() else 0
+            fl |= FL_PROBE_ON if self.probe_on() else 0
             fl |= FL_DEADMAN if self.deadman else 0
-            fl |= FL_LANE_PIN if self.lane_pin else 0
+            fl |= FL_LANE_PIN if self.lane_ok() else 0
+            fl |= FL_LANES[self.lane] if self.lane is not None else 0
+            fl |= FL_ESTOP if self.estop else 0
             fl |= FL_Z_HIGH if self.z_high() else 0
             fl |= FL_X_WIN if self.x_win() else 0
             self.out.append(f"F,{now*1e3:.0f},{mx:.3f},{mz:.3f},{fl}")
@@ -782,6 +863,10 @@ class MockRig:
         self.nano_port = MockNanoPort(clock, self.grbl_port, self.ice, cfg)
         self.grbl_port.door_open = self.nano_port.door_open
         self.grbl_port.probe_trig = self.nano_port.probe_triggered
+        if scenario == "short_pre":
+            self.nano_port.a5_short = True             # 프로브선이 처음부터 GND에 단락
+        if scenario == "short_host":
+            self.nano_port.readback = False            # Nano 되읽기 없이 호스트 Pn 대조만으로 잡는지
 
     def now(self):
         return self.t
@@ -796,6 +881,38 @@ class MockRig:
         for _ in range(int(2.0 / self.DT)):
             self.step()
         return True
+
+    def operator_action(self, kind, msg, **kw):
+        """mock 작업자 동작(2 s). 실제에서는 사람이 하고 호스트는 Nano 플래그로 확인한다."""
+        n = self.nano_port
+        print(f"  [mock 작업자] {msg}")
+        if kind == "estop_press":
+            n.estop = True
+            self.grbl_port.estop_reset()
+        elif kind == "estop_release":
+            n.estop = False
+        elif kind == "move_pin":
+            n.lane = None
+            for _ in range(int(1.0 / self.DT)):
+                self.step()
+            n.lane = kw["lane"]
+        elif kind == "repair":
+            n.a1_short = n.a5_short = False
+        elif kind == "pedal_press":
+            n.deadman = True
+        for _ in range(int(2.0 / self.DT)):
+            self.step()
+
+    def inject(self, what):
+        n = self.nano_port
+        if what == "a1_short":
+            n.a1_short = True
+        elif what == "a5_short":
+            n.a5_short = True
+        elif what == "pedal_release":
+            n.deadman = False
+        elif what == "pedal_press":
+            n.deadman = True
 
     def summary(self):
         n = self.nano_port
@@ -855,6 +972,12 @@ class Host:
         self._seg_done = 0
         self.t_last_tx = -1.0
         self.grace = -1.0
+        self.expect_estop = False      # 인덱스 절차 중: E-stop 리셋·알람을 결함으로 보지 않음
+        self.line_exp = None           # (A1 열림 기대, A5 트리거 기대)
+        self.line_exp_t = 0.0
+        self.line_st_t = -1.0
+        self.line_bad = {"A1_SHORT": 0, "A1_OPEN": 0, "A5_SHORT": 0, "A5_OPEN": 0}
+        self.inject_t = None
         self.result = {}
         self.t_state = {}
 
@@ -885,8 +1008,19 @@ class Host:
             t_end = self.now() + 1.0
             while self.now() < t_end:
                 self.rig.step()
+        # short 시나리오: 드래그 중 A1선이 GND에 눌려 단락 → 0.3 s 뒤 작업자가 발판을 뗌
+        if self.scenario in ("short", "short_host") and self.state == "DRAG" and self._seg_done >= 2 and self.inject_t is None:
+            self.inject_t = self.now()
+            self.rig.inject("a1_short")
+            self._log("INJECT_A1_SHORT", "허가선(A1) GND 단락 주입 — 이 순간에는 기대(닫힘)와 관측(닫힘)이 같아 보이지 않음")
+        if self.inject_t is not None and not self.result.get("pedal_t") and self.now() >= self.inject_t + 0.3:
+            self.rig.inject("pedal_release")
+            self.result["pedal_t"] = self.now()
+            self.result["pedal_x"] = self.grbl.st["x"] + self.grbl.st["v"] * (self.now() - self.grbl.st_t)
+            self._log("PEDAL_RELEASE", "작업자가 발판을 뗌 → 도어 열림 기대")
         self.rig.step()
         self.grbl.pump()
+        st_t_before = self.line_st_t
         self.nano.pump()
         now = self.now()
         if now - self.t_hb >= self.cfg.HB_PERIOD:
@@ -906,7 +1040,10 @@ class Host:
                 self._check_force(fx, fz)
         if self.in_fault:
             return
-        # 결함 판정 (우선순위: 알람 → Nano 래치 → 도어 → 통신)
+        # 결함 판정 (우선순위: 알람 → Nano 래치 → 선로 대조 → 도어 → 통신)
+        if self.expect_estop:
+            self.grbl.alarms.clear()               # E-stop 보조 접점 리셋은 예상된 것
+            return
         if self.grbl.alarms:
             code = self.grbl.alarms.popleft()
             raise Fault(f"GRBL_ALARM_{code}", {2: "소프트 리밋", 3: "움직이는 중 리셋", 4: "프로브 초기 트리거",
@@ -914,7 +1051,8 @@ class Host:
         for bit, code in LATCHES.items():
             if self.nano.flags & bit:
                 raise Fault(code, "Nano 하드웨어 경로가 GRBL 도어 입력을 끊음")
-        if self.grbl.st["state"].startswith("Door") and self.state not in ("HOME", "SELECT_LANE"):
+        self._check_lines()
+        if self.grbl.st["state"].startswith("Door") and self.state not in ("HOME", "SELECT_LANE", "SELF_TEST"):
             raise Fault("DOOR_HOLD", "허가선 끊김(데드맨·레인 핀·Nano)")
         if now < self.grace:
             return
@@ -922,6 +1060,39 @@ class Host:
             raise Fault("COMM_GRBL", "상태 응답 없음")
         if self.nano.last_t > 0 and now - self.nano.last_t > self.cfg.NANO_TIMEOUT:
             raise Fault("COMM_NANO", "힘 샘플 없음")
+
+    def _check_lines(self):
+        """M4: 새 상태 보고마다 GRBL 입력 핀(Pn:D, Pn:P)을 Nano가 기대하는 선 상태와 대조한다.
+
+        A1(도어, 반전): Nano 트랜지스터 ON **그리고** 발판 눌림일 때만 LOW(닫힘). 아니면 HIGH(Pn에 D)여야 한다.
+        A5(프로브, 반전): 프로브 트랜지스터 ON(무장 + 비접촉)일 때만 LOW. 아니면 Pn에 P.
+        기대 = 열림인데 관측 = 닫힘 → 선이 GND에 단락(보호가 조용히 사라짐) → '!' + 0x18 + E-stop 요구.
+        기대 = 닫힘인데 관측 = 열림 → 단선(이미 멈추는 쪽이지만 기록·정지).
+        """
+        c = self.cfg
+        fl = self.nano.flags
+        exp = ((not (fl & FL_PERMIT)) or (not (fl & FL_DEADMAN)), not (fl & FL_PROBE_ON))
+        now = self.now()
+        if exp != self.line_exp:
+            self.line_exp, self.line_exp_t = exp, now
+            for k in self.line_bad:
+                self.line_bad[k] = 0
+            return
+        if self.grbl.st_t <= self.line_st_t:            # 새 상태 보고가 없으면 대조하지 않는다
+            return
+        self.line_st_t = self.grbl.st_t
+        if self.grbl.st_t < self.line_exp_t + c.LINE_SETTLE or self.nano.last_t < self.line_exp_t + c.LINE_SETTLE:
+            return
+        pn = self.grbl.st.get("pn", "")
+        obs = ("D" in pn, "P" in pn)
+        checks = (("A1_SHORT", exp[0] and not obs[0]), ("A1_OPEN", (not exp[0]) and obs[0]),
+                  ("A5_SHORT", exp[1] and not obs[1]), ("A5_OPEN", (not exp[1]) and obs[1]))
+        for key, bad in checks:
+            self.line_bad[key] = self.line_bad[key] + 1 if bad else 0
+            if self.line_bad[key] >= c.LINE_MISMATCH_N:
+                if key.endswith("SHORT"):
+                    self.grbl.realtime(b"!")                 # 하드웨어 층이 없으니 먼저 소프트웨어로 멈춤
+                raise Fault(f"LINE_{key}", f"Pn='{pn}' vs Nano 기대(A1 열림={exp[0]}, A5 트리거={exp[1]}), 연속 {self.line_bad[key]}회")
 
     def _check_force(self, fx, fz):
         c = self.cfg
@@ -972,7 +1143,7 @@ class Host:
     def request_xy_move(self, x, z=None, kind=TRAVEL, feed=None):
         """수평 이동 요청은 모두 여기로 (R7). 수평 모터는 X(이동 베드) 하나, Y는 수동 레인 핀.
 
-        TRAVEL : 계획 Z와 측정 Z가 모두 Z_SAFE 이상일 때만.
+        TRAVEL : 계획 Z와 측정 Z가 모두 Z_TRAVEL_MIN(= Z_SAFE + 2) 이상일 때만 (Red Team L2).
         SCOOP  : DIVE/DRAG 상태이고 목표가 팬 레인 작업공간 안일 때만 (Z < Z_SAFE 허용).
         거부되면 EV_XY_BLOCKED_LOW_Z를 기록하고 False.
         """
@@ -981,7 +1152,7 @@ class Host:
         z_meas = self.fresh_status()["z"]
         z_low = min(self.plan["z"], z_meas)
         ok = False
-        if kind == TRAVEL and z is None and z_low >= c.Z_SAFE:
+        if kind == TRAVEL and z is None and z_low >= c.Z_TRAVEL_MIN:
             ok = True
         elif kind == SCOOP and self.state in ("DIVE", "DRAG") and self._in_pan_workspace(x, z_tgt) \
                 and self._in_pan_workspace(self.plan["x"], self.plan["z"]):
@@ -989,7 +1160,7 @@ class Host:
         if not ok:
             self.blocked += 1
             self._log("EV_XY_BLOCKED_LOW_Z", f"x→{x:.1f} kind={kind} z_plan={self.plan['z']:.2f} z_meas={z_meas:.2f}")
-            print(f"  t={self.now():7.3f} s    EV_XY_BLOCKED_LOW_Z: X→{x:.0f} ({kind}) 거부, Z={z_low:.1f} < Z_SAFE={c.Z_SAFE:.0f}")
+            print(f"  t={self.now():7.3f} s    EV_XY_BLOCKED_LOW_Z: X→{x:.0f} ({kind}) 거부, Z={z_low:.1f} < 이송 최소 {c.Z_TRAVEL_MIN:.0f}")
             return False
         v = feed or (c.V_TRAVEL if kind == TRAVEL else c.V_DRAG)
         words = f"X{x:.3f}" + (f" Z{z:.3f}" if z is not None else "")
@@ -1015,6 +1186,11 @@ class Host:
             self.send(f"G1 Y{th:.2f} F{self.cfg.V_TH*60:.0f}")
         self.plan["th"] = th
 
+    def operator(self, kind, msg, **kw):
+        """작업자 조치 안내(실제) / 모의 동작(mock). 기다리는 동안 감시가 멈추므로 허가선은 미리 끊어 둔다."""
+        self.rig.operator_action(kind, msg, **kw)
+        self.grace = self.now() + 0.3
+
     def confirm(self, msg):
         """작업자 확인. 기다리는 동안 호스트가 감시를 못 하므로 허가선은 미리 끊어 둔다(E0)."""
         ok = self.rig.operator_confirm(msg)
@@ -1022,6 +1198,9 @@ class Host:
         return ok
 
     def arm_permit(self):
+        if not (self.nano.flags & FL_DEADMAN):
+            self.operator("pedal_press", "발판(hold-to-run)을 밟으세요")
+            self.wait_until(lambda: bool(self.nano.flags & FL_DEADMAN), self.cfg.T_OPERATOR, "PEDAL")
         self.nano.cmd("E1")
         self.wait_until(lambda: bool(self.nano.flags & FL_PERMIT), 1.0, "PERMIT")
         self.pump(); self.pump()
@@ -1041,18 +1220,67 @@ class Host:
         self.plan = {"x": st["x"], "z": st["z"], "th": st["th"]}
         self._log("HOMED", f"X={st['x']:.1f} Z={st['z']:.1f} θ={st['th']:.1f}")
 
-    def st_select_lane(self, lane_y):
-        self.enter("SELECT_LANE", note=f"y={lane_y:+.0f}")
-        st = self.fresh_status()
-        if min(st["z"], self.plan["z"]) < self.cfg.Z_SAFE:
-            self.move_z(self.cfg.Z_SAFE + 10.0, self.cfg.V_Z_FAST)
-            self.sync()
-        self.nano.cmd("E0")                                  # 사람이 손을 넣는 동안 모든 축 허가 해제
-        if not self.confirm(f"레인 핀을 y={lane_y:+.0f} mm 구멍에 꽂으세요"):
-            raise Fault("OPERATOR_ABORT")
-        self.wait_until(lambda: bool(self.nano.flags & FL_LANE_PIN), 2.0, "LANE_PIN")
+    def _wait_pn(self, ch, want_in, timeout, code, note):
+        t0 = self.now()
+        try:
+            self.wait_until(lambda: self.grbl.st_t > t0 + 0.02 and ((ch in self.grbl.st.get("pn", "")) == want_in),
+                            timeout, code)
+        except Fault as e:
+            if e.code.startswith("TIMEOUT"):
+                if ch == "D" and want_in:
+                    self.grbl.realtime(b"!")
+                raise Fault(code, note)
+            raise
+
+    def line_self_test(self):
+        """M4 사이클 전 선로 자가시험: 허가선·프로브선을 한 번씩 '열림'으로 만들어 GRBL이 그대로 보는지 확인.
+        단락(GND)이면 열림이 안 보이고, 단선이면 닫힘이 안 보인다. 정지 상태에서만 한다(도어 열림 = hold)."""
+        prev = self.state
+        self.enter("SELF_TEST")
+        self.nano.cmd("P0")
+        self.nano.cmd("E0")
+        self._wait_pn("D", True, 0.5, "LINE_A1_SHORT", "자가시험: 허가 해제(E0)인데 GRBL이 도어 닫힘으로 봄")
+        self._wait_pn("P", True, 0.5, "LINE_A5_SHORT", "자가시험: 프로브 해제(P0)인데 GRBL이 비트리거로 봄")
+        self.nano.cmd("P1")
+        self._wait_pn("P", False, 0.5, "LINE_A5_OPEN", "자가시험: 프로브 무장(P1)인데 GRBL이 트리거로 봄")
+        self.nano.cmd("P0")
+        self._wait_pn("P", True, 0.5, "LINE_A5_SHORT", "자가시험: 프로브 해제 복귀 실패")
         self.arm_permit()
+        self._wait_pn("D", False, 0.5, "LINE_A1_OPEN", "자가시험: 허가(E1)·발판인데 GRBL이 도어 열림으로 봄")
+        self._log("LINE_SELF_TEST_OK", "A1·A5 열림/닫힘 모두 GRBL Pn과 일치")
+        self.state = prev
+
+    def st_select_lane(self, lane_y):
+        """M10 통일 절차: (Z를 이송 높이로) → E-stop(K1 차단) → 핀 이동 → 레인 스위치 3개로 구멍 확인 → 해제 → 재원점 → 선로 자가시험."""
+        c = self.cfg
+        self.enter("SELECT_LANE", note=f"y={lane_y:+.0f}")
+        if lanes_on(self.nano.flags) == [lane_y]:
+            self._log("LANE_ALREADY", f"레인 스위치 {lane_y:+.0f} ON — 인덱스 불필요")
+            self.lane_y = lane_y
+            self.line_self_test()                            # 매 사이클 시작 전 선로 자가시험(M4)
+            return
+        st = self.fresh_status()
+        if min(st["z"], self.plan["z"]) < c.Z_TRAVEL:
+            self.move_z(c.Z_TRAVEL, c.V_Z_FAST)              # 스쿱을 팬 밖으로 (Z 단독 이동)
+            self.sync()
+        self.nano.cmd("E0")
+        self.expect_estop = True
+        self.operator("estop_press", "E-stop을 누르세요 (K1: 모터 전원 차단)")
+        self.wait_until(lambda: bool(self.nano.flags & FL_ESTOP), c.T_OPERATOR, "ESTOP_PRESS")
+        self._log("ESTOP_ON", "모터 전원 차단 확인(E-stop 보조 접점)")
+        self.operator("move_pin", f"레인 핀을 y={lane_y:+.0f} mm 구멍으로 옮기세요", lane=lane_y)
+        try:
+            self.wait_until(lambda: lanes_on(self.nano.flags) == [lane_y], c.T_OPERATOR, "LANE")
+        except Fault:
+            raise Fault("LANE_MISMATCH", f"요청 {lane_y:+.0f}, 스위치 {lanes_on(self.nano.flags)}")
+        self._log("LANE_CONFIRMED", f"레인 스위치 {lanes_on(self.nano.flags)} (3개 중 정확히 1개)")
+        self.operator("estop_release", "E-stop 해제 → '모터 ON' 버튼")
+        self.wait_until(lambda: not (self.nano.flags & FL_ESTOP), c.T_OPERATOR, "ESTOP_RELEASE")
+        self.expect_estop = False
+        self.grace = self.now() + 0.3
         self.lane_y = lane_y
+        self.st_home()                                       # 모터 무전원 동안 위치를 믿을 수 없다 → 재원점
+        self.line_self_test()
 
     def st_touchoff(self):
         c = self.cfg
@@ -1178,10 +1406,10 @@ class Host:
 
     def st_lift(self):
         self.enter("LIFT")
-        self.move_z(self.cfg.Z_SAFE + 10.0, self.cfg.V_Z_FAST)
+        self.move_z(self.cfg.Z_TRAVEL, self.cfg.V_Z_FAST)
         self.sync()
         st = self.fresh_status()
-        if st["z"] < self.cfg.Z_SAFE:
+        if st["z"] < self.cfg.Z_TRAVEL_MIN:
             raise Fault("LIFT_INCOMPLETE")
 
     def st_to_cup(self):
@@ -1238,6 +1466,9 @@ class Host:
             lost = bool(self.grbl.alarms) or st["state"] == "Alarm"
             self.grbl.alarms.clear()
             self._log("RESET", "위치 상실 → 재원점 필요" if lost else "위치 유지")
+            if f.code in ("LINE_A1_SHORT", "LINE_A5_SHORT", "LINE_SHORT_READBACK"):
+                self._recover_line_short(f)
+                return
             if not self.confirm(f"결함 {f.code}: 원인 확인 후 복구"):
                 return
             self.nano.cmd("R")                                # 래치 해제는 작업자 확인 뒤에만
@@ -1256,8 +1487,8 @@ class Host:
                 self.arm_permit()
                 st = self.fresh_status()
                 self.plan = {"x": st["x"], "z": st["z"], "th": st["th"]}
-                if st["z"] < self.cfg.Z_SAFE:
-                    self.move_z(self.cfg.Z_SAFE + 10.0, self.cfg.V_Z_FAST)   # Z 단독 상승은 R7과 무관
+                if st["z"] < self.cfg.Z_TRAVEL:
+                    self.move_z(self.cfg.Z_TRAVEL, self.cfg.V_Z_FAST)   # Z 단독 상승은 R7과 무관
                     self.sync()
                 self.in_fault = False
             self.pump(); self.pump()
@@ -1268,10 +1499,35 @@ class Host:
             print(f"  복구 실패: {f2.code} — 작업자 수동 조치 필요")
             self.result["recovered"] = False
 
+    def _recover_line_short(self, f):
+        """선로 단락: 발판·Nano 정지·워치독·R7 인터록이 GRBL에 닿지 않는다 → E-stop(모터 전원 차단)을 요구하고,
+        수리 후 재원점·자가시험을 통과해야만 다시 움직인다."""
+        c = self.cfg
+        self.expect_estop = True
+        self.operator("estop_press", f"{f.code}: 하드웨어 보호층이 끊겼다 → E-stop을 누르세요")
+        self.wait_until(lambda: bool(self.nano.flags & FL_ESTOP), c.T_OPERATOR, "ESTOP_PRESS")
+        self._log("ESTOP_ON", "선로 단락 → 모터 전원 차단 확인")
+        self.result["estop_t"] = self.now()
+        self.operator("repair", "단락 위치를 찾아 수리(발판 케이블 보호관, 케이블 체인 점검)")
+        if not self.confirm("수리 완료 확인"):
+            return
+        self.operator("estop_release", "E-stop 해제 → '모터 ON' 버튼")
+        self.wait_until(lambda: not (self.nano.flags & FL_ESTOP), c.T_OPERATOR, "ESTOP_RELEASE")
+        self.expect_estop = False
+        self.nano.cmd("R")
+        self.pump(); self.pump()
+        self.in_fault = False
+        self.grace = self.now() + 0.3
+        self.st_home()
+        self.line_self_test()
+        self.enter("IDLE", note="선로 수리·재원점·자가시험 통과")
+        self.result["recovered"] = True
+
     # ---------------------------------------------------------------- 한 사이클
     def run(self, lane_y=0.0):
         try:
             self.st_home()
+            self.line_self_test()
             self.enter("IDLE", note="주문: 싱글 115 g")
             self.st_select_lane(lane_y)
             if self.scenario == "gate":
@@ -1289,6 +1545,7 @@ class Host:
             self.result["ok"] = True
         except Fault as f:
             self.result["fault"] = f.code
+            self.result["fault_t"] = self.now()
             self.handle_fault(f)
 
     def gate_test_high(self):
@@ -1311,7 +1568,8 @@ class Host:
 def main(argv=None):
     ap = argparse.ArgumentParser(description="V1-L host skeleton")
     ap.add_argument("--mock", action="store_true", help="가짜 GRBL·Nano로 실행")
-    ap.add_argument("--scenario", default="normal", choices=["normal", "overload", "hang", "gate"])
+    ap.add_argument("--scenario", default="normal",
+                    choices=["normal", "overload", "hang", "gate", "short", "short_host", "short_pre"])
     ap.add_argument("--grbl", help="GRBL 포트 (예: COM3, /dev/ttyACM0)")
     ap.add_argument("--nano", help="Nano 포트")
     ap.add_argument("--lane", type=float, default=0.0, help="레인 y [mm]: -38 / 0 / 38")
@@ -1351,6 +1609,10 @@ def main(argv=None):
             print(f"  GRBL 이벤트 t={t:.3f} s {ev} X={pos[0]:.2f} Z={pos[2]:.2f}")
     if "stop_x" in r:
         print(f"  정지 위치 X={r['stop_x']:.2f} mm")
+    if "pedal_t" in r and "stop_x" in r:
+        det = host.result.get("fault_t", float("nan")) - r["pedal_t"]
+        print(f"  발판 뗌 t={r['pedal_t']:.3f} s X={r['pedal_x']:.2f} → 검출 {r.get('fault')} (+{det*1e3:.0f} ms) → 정지 X={r['stop_x']:.2f} "
+              f"(발판 뒤 {r['stop_x'] - r['pedal_x']:.2f} mm 더 감)")
     print(f"  R7 게이트 거부 {host.blocked}회" + (f", 저Z 이송 거부={r.get('gate_low_rejected')}" if a.scenario == "gate" else ""))
     print(f"  로그: {log_path} ({len(log.events)} 이벤트)")
     return 0 if (r.get("ok") or a.scenario != "normal") else 1

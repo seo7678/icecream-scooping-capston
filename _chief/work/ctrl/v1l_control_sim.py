@@ -69,14 +69,19 @@ V_TARGET = M_TARGET / RHO * 1e3   # mm³
 G = 9.81
 
 # ---- 힘 (A01/A02/A37 비율을 L-A 설계 하중에 적용)
-F_DESIGN = 150.0          # N, L-A 구조 설계 하중 — 기계 담당 확정 필요          # ASSUMPTION
-F_TARGET = 0.55 * F_DESIGN  # A37 비율
-F_STOP_A37 = 0.80 * F_DESIGN  # A37 비율
+# 결정값 (_chief/DECISIONS.md 2026-09-28, Red Team M6 정합) — F_DESIGN 150 N 가정은 폐기
+F_NOM = 56.0              # N, 명목 드래그 힘 (90 kPa, 레인 270 mm)                 # ASSUMPTION(u)
+F_D = 100.0               # N, 설계 하중 F_d (160 kPa) — 기계 강성 목표(≤ 1 mm)의 기준  # ASSUMPTION(u)
+F_TARGET = 82.5           # N, 깊이 적응 목표 (결정)
+F_STOP_HOST = 105.0       # N, 호스트 '!' 정지 (결정)
+F_STOP_HW = 120.0         # N, Nano 도어 핀 정지 (결정, = 기계 F_STOP)
 K_VERT = 0.5              # |F_z|/F_x (A04, A28)                              # ASSUMPTION
 U_CASES = (40.0, 90.0, 160.0, 250.0)   # kPa (A02)                           # ASSUMPTION
 DFDX_CUT = (160.0 - 90.0) * 1e-3 * 624.0 / 10.0   # N/mm: 경도 90→160 kPa가 10 mm에 걸쳐 변할 때  # ASSUMPTION
-F_JAM = 329.0             # N, X 스톨 추력 (mech/v1l_mech_calc_output §1, 계산값)                # ASSUMPTION
-K_PATH = (70.0, 230.0, 290.0)   # N/mm, 스쿱 끝 ↔ 팬 X 경로 강성: L-A-lite 71, L-A 231–287 (mech/v1l_mech_calc_output §2.1, 계산값)  # ASSUMPTION
+F_JAM = (283.0, 579.0)    # N, X 걸림(스톨) 하중 범위: 풀아웃 0.40 N·m·μ 0.20 … 정지토크 0.59 N·m·μ 0.10 (Red Team B.0)  # ASSUMPTION
+F_CELL_X = 490.0          # N, X 단일점 셀 50 kg 정격 (결정: 수직 20 kg + X 50 kg 단일점 + 판스프링)  # ASSUMPTION
+K_PATH = (66.0, 112.0, 149.0)   # N/mm, H2 스쿱 끝 X 경로 강성 = 100 N / (1.52 / 0.892 / 0.67 mm) 무름/중간/단단 (mech §13.3)  # ASSUMPTION
+K_NOM = 112.0             # N/mm, H2 중간 가정
 
 # ---- HX711 (AVIA 데이터시트 값 — 확인 필요)
 HX711 = {
@@ -101,6 +106,7 @@ LAT = {
 A_X = 500.0               # mm/s², GRBL $120 (베드 X 가속)                         # ASSUMPTION
 A_Z = 300.0               # mm/s², GRBL $122                                       # ASSUMPTION
 V_DRAG_CASES = (20.0, 30.0, 40.0)   # mm/s (과제 지정)
+SEG_LEN_FOR_ALIAS = 20.0            # mm, 구간 적응 구간 길이 (§4와 같음)
 
 # ---- 구조 컴플라이언스 (스쿱 끝 수직 처짐)
 C_ZZ = 0.030              # mm/N, 수직 힘 → 수직 처짐 (3D프린터식 1.36 mm @ 50 N 수준)  # ASSUMPTION
@@ -114,7 +120,7 @@ PROBE_MARGIN = 5.0        # mm, Z_est 위에서 저속 전환 (팬 지도 + 1점
 # ---- 이동 베드
 M_PLAT = (5.0, 6.0, 7.2)  # kg, S-빔 위 질량 (과제 5–7 kg, 기계 담당 m_top 7.2 kg)        # ASSUMPTION
 M_TRUE, M_EST = 7.2, 6.2  # kg, 모의 참값 / 보정에 쓰는 추정값(1 kg 틀림)                     # ASSUMPTION
-K_SBEAM = (3.5e6, 1.5e6, 0.5e6)  # N/m: S-빔 50 kg 3504 N/mm(기계 담당), 레일·체결 포함 낮은 경우 2개  # ASSUMPTION
+K_SBEAM = (1.63e6, 0.8e6, 3.3e6)  # N/m: X 50 kg 단일점 셀(정격 처짐 0.3 mm 가정) → 76 Hz, 플렉서·체결이 무른 경우 53 Hz, 단단한 경우 108 Hz  # ASSUMPTION
 ZETA_PLAT = 0.05          # 플랫폼 진동 감쇠비                                        # ASSUMPTION
 HX_NOISE_N = 0.05         # N rms, 모터 구동 중 HX711 잡음                           # ASSUMPTION
 
@@ -243,8 +249,10 @@ table(["항목", "값", "출처"], [
     ["1 portion 목표", f"{M_TARGET:.0f} g → {V_TARGET/1e3:.1f} cm³ (ρ {RHO})", "A07, A09"],
     ["1 portion 깊이 d_portion", f"{D_PORTION:.1f} mm (A = {A_PORTION:.0f} mm²)", "stroke_volume, 같은 식"],
     ["깊이 민감도 dV/V", f"{SENS:.1f} %/mm", "d_portion에서 수치미분"],
-    ["F_DESIGN (L-A 구조 설계 하중)", f"{F_DESIGN:.0f} N", "ASSUMPTION — 기계 담당 확정 필요"],
-    ["F_TARGET / F_STOP (A37 비율)", f"{F_TARGET:.1f} / {F_STOP_A37:.0f} N", "0.55 / 0.80 × F_DESIGN"],
+    ["F_nominal / F_d", f"{F_NOM:.0f} / {F_D:.0f} N", "결정값(u 90 / 160 kPa 가정)"],
+    ["F_TARGET / 호스트 정지 / Nano 정지", f"{F_TARGET:.1f} / {F_STOP_HOST:.0f} / {F_STOP_HW:.0f} N", "결정값"],
+    ["X 경로 강성 (H2)", f"{K_PATH[1]:.0f} N/mm (무름 {K_PATH[0]:.0f} … 단단 {K_PATH[2]:.0f})", "mech §13.3, 100 N / 변위"],
+    ["X 걸림(스톨) 하중", f"{F_JAM[0]:.0f}–{F_JAM[1]:.0f} N", "Red Team B.0 (토크·μ 범위)"],
     ["드래그 힘 @ d_portion", " / ".join(f"{u:.0f} kPa → {u*1e-3*A_PORTION:.0f} N" for u in U_CASES), "F = u·A (A02)"],
     ["경도 변화 램프 dF/dx", f"{DFDX_CUT:.1f} N/mm", "90→160 kPa를 10 mm에 (ASSUMPTION)"],
     ["베드 X 가속 / Z 가속", f"{A_X:.0f} / {A_Z:.0f} mm/s²", "GRBL $120/$122 설정값 가정"],
@@ -332,42 +340,43 @@ table(["a [mm/s²]", "감속 거리 [mm]", "총 추가 이동 [mm]", "ΔF 경도
 p("- GRBL은 축마다 가속도가 하나($120)라 드래그용 완만한 램프(예: 200 mm/s²)를 따로 줄 수 없다. 낮추면 정지 거리도 같이 늘어난다.")
 p("")
 
-p("### 2.5 정지 한계 제안")
+p("### 2.5 결정값 검증 — 정지 후 최대 힘 (H2)")
 p("")
-p(f"조건: 정지 후 최대 힘 = F_trip + ΔF(worst) ≤ F_DESIGN = {F_DESIGN:.0f} N (경도 램프 기준). "
-  "F_trip 상한을 5 N 단위로 내림.")
+p(f"결정값 호스트 {F_STOP_HOST:.0f} N / Nano {F_STOP_HW:.0f} N을 그대로 두고, 정지 지연 동안 더 들어가는 힘을 H2 경로로 본다. "
+  f"비교 기준: F_d {F_D:.0f} N(강성 목표), 걸림 하한 {F_JAM[0]:.0f} N(이보다 크면 X가 먼저 탈조할 수 있음), X 셀 정격 {F_CELL_X:.0f} N.")
 p("")
 rows = []
-trip_max = {}
+peak_ramp = {}
 for v in V_DRAG_CASES:
-    for path in ("host", "pin_hold"):
+    for path, ftrip in (("host", F_STOP_HOST), ("pin_hold", F_STOP_HW)):
         s_w = stop_distance(v, lat_total(path)[2], path)
-        fmax = math.floor((F_DESIGN - DFDX_CUT * s_w) / 5.0) * 5.0
-        trip_max[(v, path)] = fmax
-        rows.append([f"{v:.0f}", PATH_NAME[path], f2(s_w), f"{fmax:.0f}", f"{fmax / F_DESIGN:.2f}"])
-table(["v [mm/s]", "경로", "추가 이동 worst [mm]", "F_trip 상한 [N]", "× F_DESIGN"], rows)
-
-V_REC = 30.0
-F_STOP_HW = min(F_STOP_A37, trip_max[(V_REC, "pin_hold")])
-F_STOP_HOST = math.floor(0.7 * F_DESIGN / 5.0) * 5.0
-p(f"**제안 (v_drag = {V_REC:.0f} mm/s):** 호스트 F_STOP_HOST = {F_STOP_HOST:.0f} N (0.70 × F_DESIGN, 먼저 걸림, 로그·재시도용), "
-  f"Nano 하드웨어 F_STOP_HW = {F_STOP_HW:.0f} N (min(A37 0.80, 표 상한), 노트북과 무관하게 동작). "
-  f"깊이 적응 목표 F_TARGET = {F_TARGET:.1f} N.")
+        pk = ftrip + DFDX_CUT * s_w
+        peak_ramp[(v, path)] = pk
+        pk_rigid = ftrip + K_NOM * s_w
+        rows.append([f"{v:.0f}", PATH_NAME[path], f"{ftrip:.0f}", f2(s_w), f1(pk), f2(pk / K_NOM),
+                     f"{pk_rigid:.0f}" + (" (탈조 범위)" if pk_rigid >= F_JAM[0] else "")])
+table(["v [mm/s]", "경로", "F_trip [N]", "추가 이동 worst [mm]", "최대 힘, 경도 램프 [N]",
+       "그때 스쿱 끝 변위 [mm]", f"최대 힘, 강체 k={K_NOM:.0f} [N]"], rows)
+p(f"- 경도 램프에서는 30 mm/s 기준 호스트 {peak_ramp[(30.0, 'host')]:.0f} N, Nano {peak_ramp[(30.0, 'pin_hold')]:.0f} N에서 멈춘다. "
+  f"걸림 하한 {F_JAM[0]:.0f} N과 셀 정격보다 충분히 작다. 그 순간 스쿱 끝은 H2 중간 강성으로 "
+  f"{peak_ramp[(30.0, 'pin_hold')]/K_NOM:.2f} mm 밀린다(강성 목표 1 mm @ F_d를 과부하 순간에만 넘음, portion과 무관).")
 p("")
-p("강체 장애물은 힘 정지로 막을 수 없는 속도가 있다. 아래는 F_trip = F_STOP_HW에서 정지 후 힘이 F_DESIGN을 넘지 않는 최대 속도다.")
+p(f"**강체 충돌:** 힘 정지가 **탈조보다 먼저** 걸리려면 F_trip + k·(추가 이동) ≤ 걸림 하한 {F_JAM[0]:.0f} N이어야 한다. 그 최대 속도:")
 p("")
 rows = []
+v_rigid = {}
 for k in K_PATH:
-    budget = (F_DESIGN - F_STOP_HW) / k       # mm
-    for path in ("pin_hold", "host"):
+    for path, ftrip in (("pin_hold", F_STOP_HW), ("host", F_STOP_HOST)):
+        budget = (F_JAM[0] - ftrip) / k       # mm
         t = lat_total(path)[2] * 1e-3
-        # v t + v²/2a = budget → v = a(−t + sqrt(t² + 2 budget/a))
         vmax = A_X * (-t + math.sqrt(t * t + 2 * budget / A_X))
+        v_rigid[(k, path)] = vmax
         rows.append([f"{k:.0f}", PATH_NAME[path], f2(budget), f1(vmax)])
 table(["경로 강성 k [N/mm]", "경로", "허용 추가 이동 [mm]", "허용 속도 [mm/s]"], rows)
-p("- 강체 충돌은 keep-out(팬 벽 여유)·속도 제한·X 드라이버 전류 제한(스톨 추력)으로 막고, 힘 정지는 경도 변화·과깊이용으로 쓴다.")
-p(f"- 강체 충돌 힘의 실제 상한은 X 스톨 추력이다: 기계 담당 계산 F_JAM ≈ {F_JAM:.0f} N(TR8 리드 4, NEMA17 0.4 N·m). "
-  "위 표의 수백 N 값은 그 전에 모터가 탈조해 멈춘다는 뜻이다(위치 상실 → 재원점). 드라이버 전류를 낮추면 상한도 낮아지지만 드래그 여유(2.25)도 줄어든다.")
+p(f"- H2 중간({K_NOM:.0f} N/mm)에서 Nano 경로 허용 속도는 {v_rigid[(K_NOM, 'pin_hold')]:.1f} mm/s로, 드래그 30 mm/s보다 낮다. "
+  f"드래그 중 강체에 걸리면 힘 정지보다 **X 탈조가 먼저**일 수 있고, 그때 힘은 걸림 하중 {F_JAM[0]:.0f}–{F_JAM[1]:.0f} N(토크·μ·전류에 따라)까지 오른다.")
+p("- 그래서 강체 충돌은 keep-out(벽 여유)·속도 상한·X 드라이버 전류·기계식 과부하 스톱으로 막고, 힘 정지는 경도 변화·과깊이용으로 쓴다. "
+  "탈조하면 GRBL은 모른다 → 결함 후에는 항상 재원점. X 전류(전자 1.5 A 설정이면 걸림 313–435 N, 토크 여유 1.69)는 기계·전자 결정 사항이다.")
 p("")
 
 # =====================================================================================
@@ -703,7 +712,7 @@ table(["플랫폼 질량 [kg]", "a = 250", "500", "1000", "2000 mm/s² → m·a 
 for k in K_SBEAM:
     for m in (5.0, 7.0):
         fn = math.sqrt(k / m) / (2 * math.pi)
-        p(f"- S-빔 경로 강성 {k/1e6:.1f} N/µm, {m:.0f} kg → 고유진동수 {fn:.0f} Hz (80 SPS 나이퀴스트 40 Hz)")
+        p(f"- X 셀 경로 강성 {k/1e6:.2f} N/µm, {m:.0f} kg → 고유진동수 {fn:.0f} Hz (80 SPS 나이퀴스트 40 Hz)")
 p("")
 
 
@@ -790,12 +799,39 @@ for k in K_SBEAM:
     x10 = fn / 10.0
     att10 = abs(math.sin(math.pi * x10) / (math.pi * x10)) ** HX_ORDER
     db = lambda g: "< −100" if g < 1e-5 else f"{20*math.log10(g):.0f}"
-    rows.append([f"{k/1e6:.1f}", f"{fn:.0f}", db(att), db(att10)])
+    rows.append([f"{k/1e6:.2f}", f"{fn:.0f}", db(att), db(att10)])
 p(f"HX711 필터를 sinc⁴(샘플 주기 길이)로 가정했을 때 플랫폼 진동({M_TRUE:.1f} kg)이 얼마나 줄어드는지:")
 p("")
-table(["S-빔 경로 강성 [N/µm]", "f_n [Hz]", "80 SPS 감쇠 [dB]", "10 SPS 감쇠 [dB]"], rows)
+table(["X 셀 경로 강성 [N/µm]", "f_n [Hz]", "80 SPS 감쇠 [dB]", "10 SPS 감쇠 [dB]"], rows)
 p("- 80 SPS에서도 에일리어싱 성분이 수십 dB 줄어든다(필터 모양 가정 — 확인 필요, T6). 10 SPS로 내리면 감쇠는 조금 더 크지만 지연이 250 ms 이상 늘어난다(§2.2).")
 p("")
+p("### 5.0 에일리어싱 — 지속 진동이 구간 평균에 남기는 오차")
+p("")
+T_SEG_S = SEG_LEN_FOR_ALIAS / 30.0
+p(f"76 Hz는 80 SPS에서 |80 − 76| = 4 Hz로 접힌다(대역 안). 떨림이 **계속** 있다면(끌림 stick-slip 등, 가정) 구간 평균({SEG_LEN_FOR_ALIAS:.0f} mm = {T_SEG_S:.2f} s)에 얼마나 남는가. "
+  "진폭 1 N 정현파 가정. HX711 필터는 (a) sinc¹(변환 주기 적분만 — 델타-시그마 ADC의 최소 조건, 보수) (b) sinc⁴(정착 50 ms와 맞는 가정) 두 경우.")
+p("")
+rows = []
+worst = {1: 0.0, 4: 0.0}
+for fv in (42.0, 53.0, 60.0, 70.0, 76.0, 78.0, 79.5, 80.5, 85.0, 108.0):
+    fa = abs(fv - 80.0 * round(fv / 80.0))
+    g_seg = abs(math.sin(math.pi * fa * T_SEG_S) / (math.pi * fa * T_SEG_S)) if fa > 1e-9 else 1.0
+    r = [f"{fv:.1f}", f"{fa:.1f}"]
+    for order in (1, 4):
+        xx = fv / 80.0
+        g = abs(math.sin(math.pi * xx) / (math.pi * xx)) ** order
+        res = g * g_seg
+        worst[order] = max(worst[order], res)
+        r += [f"{g:.4f}", f"{res:.4f}"]
+    rows.append(r)
+table(["진동 f [Hz]", "접힌 f [Hz]", "sinc¹ 이득", "sinc¹ 구간 평균 잔차 [N]", "sinc⁴ 이득", "sinc⁴ 구간 평균 잔차 [N]"], rows)
+p(f"- 접힌 주파수가 0에 가까운 진동(= 80 Hz 근처)은 sinc 필터의 첫 영점(80 Hz) 근처라 필터가 거의 없앤다. 구간 평균이 못 지우는 저주파 쪽은 필터가 남기지 않는다. "
+  f"1 N 지속 진동의 최대 잔차: sinc¹ {worst[1]:.3f} N, sinc⁴ {worst[4]:.5f} N.")
+p("- 가속 때 생기는 과도 진동은 감쇠(ζ 0.05, 76 Hz면 τ ≈ 42 ms)로 등속 구간 전에 줄어든다(§5.1).")
+p("- **판단: 80 SPS 유지.** 76 Hz는 에일리어싱 위험이 가장 큰 곳(80 Hz 근처)처럼 보이지만, 변환 주기로 적분하는 ADC에서는 그곳이 바로 영점이다. "
+  "위험은 HX711 필터의 길이가 출력 주기와 다를 때뿐이다 → T6에서 빈 팬 등속 이동 중 0.5–5 Hz 맥놀이가 있는지 본다. 보이면 플렉서 강성·질량으로 f_n을 옮기거나 고무 감쇠를 넣는다.")
+p("")
+
 p(f"### 5.1 시간영역 모의 (v = 30 mm/s, a = 500 mm/s², 절삭력 56 N, m 참값 {M_TRUE:.1f} kg / 추정 {M_EST:.1f} kg) — 모의")
 p("")
 p("오차 기준 = 같은 HX711 필터를 통과한 참 절삭력. 즉 필터 지연 자체는 빼고, 관성·진동이 섞인 양만 본다.")
@@ -808,8 +844,8 @@ for k in K_SBEAM:
         series_keep = ser
     fn = math.sqrt(k / M_TRUE) / (2 * math.pi)
     for name, (emax, erms) in res.items():
-        rows.append([f"{k/1e6:.1f} ({fn:.0f} Hz)", name, f2(emax), f2(erms)])
-table(["S-빔 경로 강성 [N/µm] (f_n)", "추정 방식", "최대 오차 [N]", "RMS 오차 [N]"], rows)
+        rows.append([f"{k/1e6:.2f} ({fn:.0f} Hz)", name, f2(emax), f2(erms)])
+table(["X 셀 경로 강성 [N/µm] (f_n)", "추정 방식", "최대 오차 [N]", "RMS 오차 [N]"], rows)
 p(f"- 등속 구간만 쓰면 레인 양 끝에서 약 {lost:.1f} mm(가속·정착·감속) 동안 판정을 쉰다(레인 {LANE:.0f} mm의 {lost/LANE*100:.1f} %).")
 p(f"- **과부하 정지 판정은 모든 구간에서 해야 한다.** 가속 구간에는 m·a_max({M_TRUE:.1f} kg × 0.5 m/s² = {M_TRUE*0.5:.1f} N)만큼 임계를 올리거나 방식 C로 보정한다. "
   "u 추정·깊이 적응·부피 적분에는 방식 D(등속 구간 평균)를 쓴다.")
@@ -837,7 +873,7 @@ p("")
 
 p("### 6.1 R7 하드웨어 이중화 — 게이트를 우회한 이송이 창 밖으로 나갈 때")
 p("")
-p(f"Nano가 'Z-높이 스위치 OFF 그리고 X-창 스위치 OFF'를 보면 GRBL 도어 입력을 끊는다(스위치는 HX711을 거치지 않음). "
+p(f"Nano가 'Z-높이 스위치 OFF 그리고 X-창 스위치 OFF'를 보면 GRBL 도어 입력을 끊는다(스위치는 HX711을 거치지 않음; Z-높이 스위치는 Z_SAFE + 0.5 mm에서 ON, Red Team L2). "
   f"창 끝 = 레인 끝 + {X_WIN_OVER:.0f} mm, 팬 벽까지 C 여유 = 벽 여유 {WALL_MARGIN:.0f} mm − {X_WIN_OVER:.0f} mm.")
 p("")
 rows = []
@@ -851,10 +887,35 @@ p(f"- **X 최대 속도($110)를 {V_TRAVEL:.0f} mm/s 이하로** 두면 게이�
   "이송 속도를 올리려면 창을 좁히거나 벽 여유를 늘린다.")
 p("")
 
+p("### 6.2 허가선(A1) GND 단락 — 검출 지연과 발판을 뗀 뒤 더 가는 거리 (Red Team M4)")
+p("")
+p("A1이 GND에 붙으면 발판·Nano 정지·워치독·R7 인터록이 GRBL에 닿지 않는다. 운전 중(허가 ON·발판 눌림)에는 기대와 관측이 둘 다 '닫힘'이라 "
+  "**보이지 않는다.** 기대가 '열림'으로 바뀌는 순간(발판 뗌, Nano 정지, 사이클 끝 자가시험)에만 드러난다. 그때 멈추는 경로:")
+p("")
+LINE_SETTLE, ST_PERIOD, MISMATCH_N = 60.0, 50.0, 2          # ms, 호스트 설정 (host_skeleton.Cfg)
+host_tail = [LAT["ser_in"], LAT["usb_in"], LAT["py"], LAT["usb_out"], LAT["grbl_rt"], LAT["grbl_seg"]]
+def tail_sum(i):
+    return sum(x[i] for x in host_tail)
+paths = [
+    ("정상(단락 없음): 발판 접점 → GRBL 도어", (0.0, 0.0, 0.0), [LAT["grbl_rt"], LAT["grbl_seg"]]),
+    ("단락 + Nano 되읽기(A6, 2샘플) → 호스트 '!'", (12.5, 25.0, 37.5), host_tail),
+    ("단락 + 호스트 Pn 대조(안정 60 ms + 연속 2회 보고) → '!'", (LINE_SETTLE + ST_PERIOD, LINE_SETTLE + 1.5 * ST_PERIOD, LINE_SETTLE + MISMATCH_N * ST_PERIOD), host_tail),
+]
+rows = []
+for name, det, tail in paths:
+    t = [det[i] + sum(x[i] for x in tail) for i in range(3)]
+    rows.append([name, f1(t[1]), f1(t[2])] + [f2(v * t[2] * 1e-3 + v * v / (2 * A_X)) for v in V_DRAG_CASES])
+table(["경로", "지연 nom [ms]", "지연 worst [ms]"] + [f"{v:.0f} mm/s 추가 이동 worst [mm]" for v in V_DRAG_CASES], rows)
+p("- mock(`host_skeleton.py --scenario short / short_host`)은 USB·파이썬 지연이 없어 이보다 짧게 나온다(발판 뒤 2.80 / 7.00 mm).")
+p("- 단락이 생긴 뒤 드러나기 전까지 남는 보호: 호스트 '!'(105 N), 호스트 R7 게이트, 통신 감시. 사라지는 것: 발판, Nano 120 N, 워치독, 하드웨어 R7. "
+  "드러나지 않는 창은 최대 한 사이클이다 → 매 사이클 시작 전 선로 자가시험(E0/P0 → Pn 확인 → P1/E1)으로 닫는다.")
+p("- 선택 보강: Nano가 단락을 보면 GRBL 리셋 핀(A0, E-stop 보조 접점과 병렬 NPN)을 당겨 즉시 멈춘다(위치 상실 → 재원점). A0선이 단락되면 GRBL이 리셋 상태로 머물러 움직이지 않는 쪽이라 이 선은 스스로 안전 쪽이다(미구현, §12 확인 필요).")
+p("")
+
 p("## 7. 이 출력에서 ASSUMPTION인 것 (요약)")
 p("")
-p("F_DESIGN 150 N, 경로 강성 70/230/290 N/mm(기계 담당 계산값), 경도 램프 4.4 N/mm, HX711 필터 군지연 = 정착/2, GRBL 세그먼트 소진 0–50 ms, "
-  "USB·파이썬 지연, 감속도 500 mm/s², C_zz 0.002–0.05·C_zx = C_zz/3 mm/N, σ_F 2 N, 플랫폼 5–7.2 kg·S-빔 강성 0.5–3.5 N/µm, u 경도 시나리오와 변화율. "
+p("F_nominal 56·F_d 100 N(u 가정), H2 경로 강성 66/112/149 N/mm(기계 계산값), 걸림 283–579 N, 경도 램프 4.4 N/mm, HX711 필터 군지연 = 정착/2, GRBL 세그먼트 소진 0–50 ms, "
+  "USB·파이썬 지연, 감속도 500 mm/s², C_zz 0.002–0.05·C_zx = C_zz/3 mm/N, σ_F 2 N, 플랫폼 5–7.2 kg·X 셀 경로 강성 0.8–3.3 N/µm(76 Hz 기준), u 경도 시나리오와 변화율. "
   "데이터시트 값(HX711 10/80 SPS, 정착 400/50 ms)과 GRBL 동작은 v1l_control.md '확인 필요' 목록에서 확인한다.")
 p("")
 
@@ -876,7 +937,7 @@ try:
     windows = ((0.05, 0.40, "Drag start (bed accelerates)"), (0.70, 1.05, "Drag stop (bed decelerates)"))
     for ax, (x0, x1, ttl) in zip(axes, windows):
         ax.set_facecolor(SURF)
-        ax.plot(s["t"], s["fs"], color=GRID, lw=1.0, label="S-beam force, before HX711 filter")
+        ax.plot(s["t"], s["fs"], color=GRID, lw=1.0, label="X cell force, before HX711 filter")
         ax.plot(ti, s["ref"], color=INK, lw=1.5, label="True cutting force (same filter)")
         ax.plot(ti, s["meas"], color=S1, lw=1.5, label="A  raw 80 SPS reading")
         ax.plot(ti, s["estB"], color=S2, lw=1.5, label="B  minus m*a_cmd (unfiltered)")
@@ -894,7 +955,7 @@ try:
     axes[0].set_ylabel("F_x [N]", color=MUTED, fontsize=8)
     h, lab = axes[0].get_legend_handles_labels()
     fig.legend(h, lab, loc="lower center", ncol=3, frameon=False, fontsize=7, labelcolor=INK)
-    fig.suptitle(f"Moving-bed inertia in F_x (simulated: {M_TRUE:.1f} kg on S-beam, 500 mm/s^2, 30 mm/s, estimator mass {M_EST:.1f} kg)",
+    fig.suptitle(f"Moving-bed inertia in F_x (simulated: {M_TRUE:.1f} kg on X cell (76 Hz), 500 mm/s^2, 30 mm/s, estimator mass {M_EST:.1f} kg)",
                  x=0.01, ha="left", color=INK, fontsize=9)
     fig.tight_layout(rect=(0, 0.14, 1, 0.95))
     fig.savefig(OUT_FIG, facecolor=SURF)
