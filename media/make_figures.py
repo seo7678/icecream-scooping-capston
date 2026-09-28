@@ -1045,10 +1045,10 @@ def fig_v1l(frame=None):
     BX0, BX1, BY = -500.0, 500.0, 280.0         # base 1000 x 560
     RAIL_X = (-350.0, 450.0)
     if ply:                                     # H2 (§13.2): rim 299 above the base top
-        BASE_TOP, BENCH = -299.0, -407.0        # board 18T on ribs 80 + rubber pads 10
+        BASE_TOP, BENCH = -337.0, -445.0        # board 18T on ribs 80 + rubber pads 10 (RT1: rim = base + 337)
         XB = X - 125.0                          # bridge centre: column 25 in front of the cross-plate front edge
         XF = XB + 60.0                          # cross-plate front (+X) edge
-        DECK = (-254.0, -236.0)                 # 18T deck on SBR16UU (45 above the base)
+        DECK = (-292.0, -274.0)                 # 18T deck on SBR16UU (45 above the base)
         DECK_Y = 200.0                          # 650 x 400 -> 31 mm gap to the side plates
     else:                                       # §2 sketch: tower top 955 above the base = z_u 640
         BASE_TOP, BENCH = -315.0, -380.0
@@ -1100,8 +1100,8 @@ def fig_v1l(frame=None):
         slab([(x0 + nx, z0 + nz), (x1 + nx, z1 + nz), (x1 - nx, z1 - nz), (x0 - nx, z0 - nz)], "xz", y0, y1, color, **kw)
 
     def side_plate(ys, alpha=1.0):
-        """H2: rectangular 18T side plate 500 (X) x 939 (Z) = tower + side guard."""
-        A.box(XB - 250, XB + 250, ys * TY - 9, ys * TY + 9, BASE_TOP, BASE_TOP + 939, C_PLY, ec=C_PLY_E, lw=0.7,
+        """H2: rectangular 18T side plate 500 (X) x 977 (Z) = tower + side guard."""
+        A.box(XB - 250, XB + 250, ys * TY - 9, ys * TY + 9, BASE_TOP, BASE_TOP + 977, C_PLY, ec=C_PLY_E, lw=0.7,
               alpha=alpha)
 
     def a_frame(ys):
@@ -1267,8 +1267,8 @@ def fig_v1l(frame=None):
     if ply:
         side_plate(-1, alpha=0.2)
         A.draw(ax, A.flush(), 6.6)
-        q = A.pts([(XB - 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP + 939),
-                   (XB - 250, -TY - 9, BASE_TOP + 939)])
+        q = A.pts([(XB - 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP + 977),
+                   (XB - 250, -TY - 9, BASE_TOP + 977)])
         ax.add_patch(Polygon(q, closed=True, fc="none", ec=C_PLY_E, lw=0.8, alpha=0.75, zorder=6.7))  # see-through outline
         win = A.pts([(XB + 250, -TY + 9, 130), (XB + 250, TY - 9, 130), (XB + 250, TY - 9, Z_U), (XB + 250, -TY + 9, Z_U)])
         ax.add_patch(Polygon(win, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.9, alpha=0.1, zorder=8))
