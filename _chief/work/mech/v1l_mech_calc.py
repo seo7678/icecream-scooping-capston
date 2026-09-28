@@ -205,6 +205,7 @@ STACK_P = {"SBR16 rail+block": 45.0, "bed spacer (18T offcut)": 18.0, "bed deck 
            "holder floor (XPS 50 + ply 6)": 56.0, "pan": PAN["H"]}
 H_RIM_P = sum(STACK_P.values())
 BED_BLOCK_Z_P = 22.0
+X_AXIS_H = 30.0       # X screw axis above the base-plate top (KFL08 on 10T upright) — DESIGN
 H_RIM_METAL, BED_BLOCK_Z_METAL = 315.0, 46.5  # 이전안 metal stack (first draft)
 
 # masses [kg]
@@ -494,6 +495,7 @@ p(f"- μ 0.20(너트 마찰 큼)이면 30 mm/s에서 {m_sel20:.2f} → **T1 시�
   "F_STOP은 결정값(120 N) 유지.")
 p(f"- 이송 {V_TRAVEL:.0f} mm/s = {V_TRAVEL/LEAD_X*60:.0f} rpm, 가속 {A_X*1e3:.0f} mm/s²: 여유 "
   f"{stepper_torque(V_TRAVEL/LEAD_X*60, T_LO_X) / ((M_BED*A_X + f_fric)*(LEAD_X/1e3)/(2*math.pi*screw_eff(LEAD_X, 0.20)) + (J_ROTOR+J_screw)*A_X*2*math.pi/(LEAD_X/1e3)):.1f} (μ 0.20).")
+p("")
 rows = []
 n_crit = 9.7 * TR8_DR / X_SCREW_L ** 2 * 1e7
 A_bear = math.pi * TR8_DM * (TR8_P / 2) * (NUT_LEN / TR8_P)
@@ -554,7 +556,7 @@ p("")
 rows = []
 for lab, F in (("F_nom", F_NOM), ("F_TARGET", F_TARGET), ("F_d", F_D), ("F_STOP", F_STOP)):
     tc = F * R / 1e3
-    rows.append([lab, f"{F:.0f}", f2(F * Z_CENT / 1e3), f2(tc), "●" if tc <= PG_T_CONT else ("△ 순간 정격 안" if tc <= PG_T_PEAK else "✘"), f"{tc/0.025:.0f}"])
+    rows.append([lab, f"{F:g}" if lab == "F_TARGET" else f"{F:.0f}", f2(F * Z_CENT / 1e3), f2(tc), "●" if tc <= PG_T_CONT else ("△ 순간 정격 안" if tc <= PG_T_PEAK else "✘"), f"{tc/0.025:.0f}"])
 table(["수준", "F_x [N]", "τ_hold [N·m]", "τ_close [N·m]", f"PG27 {PG_T_CONT:.0f} / {PG_T_PEAK:.0f} N·m [S4]", "이중 push-rod 로드력 τ/l [N]"], rows)
 Pcr = math.pi ** 2 * E_SS * (math.pi * 8 ** 4 / 64) / STEM ** 2
 p(f"- 기존 7 N·m = 200 N × 35 mm(초판 V1 기준) → V1-L에 과대. 깊이 적응이 F_TARGET {F_TARGET} N을 지키면 τ_close {F_TARGET*R/1e3:.2f} N·m로 연속 정격 안. "
@@ -728,6 +730,9 @@ table(["항목", "값", "비고"], [
     [f"  + 측판 흔들림(뒷벽 하단 테두리 + {WALL_BOTTOM:.0f} → 자유 높이 {h_low:.0f} mm)", f"{sway[3]:.2f} (발 핀) / {sway[12]:.2f} (발 고정) mm", "초판(+60)보다 커짐 — 발 클리트 양면 접착으로 고정 쪽에 가깝게"],
     [f"Z 너트 자리 수직 @ F_z {Fz:.0f} N (교차판 + 앞 립, 립은 앞에서 {RIB_SETBACK:.0f} 뒤)", f"{ss_mid(Fz, SPAN_PLATE, E_PLY*I_L):.3f} mm", f"I = {I_L:.3g} mm⁴"],
     ["  자중 처짐 크리프", f"×{1+K_DEF[0]:.1f}–{1+K_DEF[1]:.1f}", "k_def(원문 확인 필요), 터치오프가 흡수"],
+    [f"베드 데크 처짐 @ F_z {Fz:.0f} N (블록 사이 300, 폭 394)", f"{ss_mid(Fz, 300.0, E_PLY*394.0*T_PLY**3/12):.3f} mm", "F_z 측정으로 보상 가능"],
+    ["X 모터 위 데크 통과 간극", f"{STACK_P['SBR16 rail+block'] + STACK_P['bed spacer (18T offcut)'] - (X_AXIS_H + 21.0):.0f} mm",
+     f"데크 아래면 = SBR16 45 + 받침 18, 모터 위 끝 = 축 {X_AXIS_H:.0f} + 21 → 모터 덮개(3D 프린트)로 막음"],
 ])
 
 p("### 6.5 힘 플랫폼 — 병렬 배치와 데크 접지 스톱 케이지 (Red Team M7)")
@@ -849,7 +854,7 @@ p("")
 if os.path.exists(BOM_CSV):
     with open(BOM_CSV, encoding="utf-8", newline="") as fh:
         bom = list(csv.reader(fh))[1:]
-    mine = [r for r in bom if ("[기계 RT1]" in r[14] or r[1] == "Frame") and int(r[7] or 0) > 0]
+    mine = [r for r in bom if r[0].startswith("L") and ("[기계 RT1]" in r[14] or r[1] == "Frame") and int(r[7] or 0) > 0]
     table(["ID", "구분", "품목", "수량", "합계 [원]", "가격 상태"], [[r[0], r[1], r[2], r[4], f"{int(r[7]):,}", r[10]] for r in mine])
     sums = {r[0]: (int(r[7]), r[14]) for r in bom if r[0].startswith("SUM")}
     table(["합계 행", "금액 [원]", "비고"], [[k, f"{v:,}", n] for k, (v, n) in sums.items()])

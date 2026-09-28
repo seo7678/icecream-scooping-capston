@@ -30,6 +30,8 @@ with open(BOM, encoding="utf-8", newline="") as fh:
     rows = list(csv.reader(fh))
 hdr, body = rows[0], rows[1:]
 assert len(hdr) == 15
+if any("[기계 RT1]" in r[14] for r in body):
+    raise SystemExit("RT1 rows already applied — this H2 script would revert them; use v1l_bom_rt1_update.py")
 orig = {r[0]: list(r) for r in body}
 
 
