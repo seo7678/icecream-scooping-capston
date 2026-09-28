@@ -1062,7 +1062,7 @@ def fig_v1l(frame=None):
     CUPX = B0 + 576                             # cup centre: 466 from the lane start
     PLAT_TOP = -176.0                           # holder bottom (XPS 50 + ply 6 below the pan floor)
     PLAT_Y = DECK_Y - 2 if ply else 215.0
-    COL = (X - 40, X + 40, -20.0, 20.0, Z + 300, Z + 800)     # 4080 Z column, 500 long
+    COL = (X - 40, X + 40, -20.0, 20.0, Z + 300, Z + 850)     # 4080 Z column, 550 long (RT1)
 
     def shade(n):
         nx, ny, nz = n
@@ -1164,7 +1164,7 @@ def fig_v1l(frame=None):
     A.box(-470, -440, 95, 99, BASE_TOP + 44, BASE_TOP + 56, "#4CAF50", ec="none")           # status LED strip
     if ply:
         side_plate(+1)
-        A.box(XF - 288, XF - 270, -TY + 9, TY - 9, 60, Z_U, C_PLY, ec=C_PLY_E, lw=0.7)      # rear wall 462 x 580
+        A.box(XF - 288, XF - 270, -TY + 9, TY - 9, 130, Z_U, C_PLY, ec=C_PLY_E, lw=0.7)     # rear wall 462 x 510 (RT1: bottom at rim + 130)
     else:
         a_frame(+1)
     A.draw(ax, A.flush(), 2)
@@ -1270,7 +1270,7 @@ def fig_v1l(frame=None):
         q = A.pts([(XB - 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP), (XB + 250, -TY - 9, BASE_TOP + 939),
                    (XB - 250, -TY - 9, BASE_TOP + 939)])
         ax.add_patch(Polygon(q, closed=True, fc="none", ec=C_PLY_E, lw=0.8, alpha=0.75, zorder=6.7))  # see-through outline
-        win = A.pts([(XB + 250, -TY + 9, 60), (XB + 250, TY - 9, 60), (XB + 250, TY - 9, Z_U), (XB + 250, -TY + 9, Z_U)])
+        win = A.pts([(XB + 250, -TY + 9, 130), (XB + 250, TY - 9, 130), (XB + 250, TY - 9, Z_U), (XB + 250, -TY + 9, Z_U)])
         ax.add_patch(Polygon(win, closed=True, fc="#9CC0E6", ec="#7FA3C6", lw=0.9, alpha=0.1, zorder=8))
         ax.add_patch(Polygon(win, closed=True, fc="none", ec="#7FA3C6", lw=0.9, zorder=8.05))
         for zh in (220.0, 450.0):                                                            # hinges on the far edge
