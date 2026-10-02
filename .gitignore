@@ -1,12 +1,8 @@
-# CAD temporary/export files
-*.bak
-*.tmp
-*.autosave
-
-# Python/data
-__pycache__/
-*.pyc
-.venv/
+# 내 원본 글은 기본적으로 커밋하지 않는다 (개인정보·저작권·비공개 자료 섞임)
+# 커밋하고 싶은 샘플만 corpus/_example/ 에 넣는다
+corpus/*
+!corpus/_example/
+!corpus/README.md
 
 # OS/editor
 .DS_Store
@@ -14,12 +10,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Experiment raw media / large exports
-experiments/raw/
-*.mp4
-!media/*.mp4
-*.mov
-*.zip
-
-# Copyrighted reference PDFs (keep local)
-references/pdf/
+# Python
+__pycache__/
+*.pyc
+.venv/
