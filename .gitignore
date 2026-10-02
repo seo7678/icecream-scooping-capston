@@ -1,8 +1,19 @@
-# 내 원본 글은 기본적으로 커밋하지 않는다 (개인정보·저작권·비공개 자료 섞임)
+# 이 레포는 public 이다. 내 글이 들어가는 것은 전부 커밋하지 않는다.
+# (개인정보·저작권·비공개 자료 섞임)
 # 커밋하고 싶은 샘플만 corpus/_example/ 에 넣는다
 corpus/*
 !corpus/_example/
 !corpus/README.md
+
+# 내가 고친 기록, 실제 프로파일(원문 예문 포함)
+feedback/*
+!feedback/.gitkeep
+profiles/*
+!profiles/_TEMPLATE.md
+
+# AI 기본 초안 (대조용)
+baseline/*
+!baseline/README.md
 
 # OS/editor
 .DS_Store
